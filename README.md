@@ -4,7 +4,7 @@ StockMicroservices
 
 ## Description
 
-A project demonstrating various web technologies and techniques. This is a StockMicroservices application takes the Stock application and implements it with a microservice architecture. This application is comprised of Identity Server for authentication, a React-based web client and a web-api all running on containers. It leverages Docker, Ocelot API Gateway, RabbitMq for messaging.
+A project demonstrating various web technologies and techniques. This StockMicroservices application takes the Stock application and implements it with a microservice architecture. This application is comprised of Identity Server for authentication, a React-based web client and a web-api all running on containers. It leverages Docker, Ocelot API Gateway, RabbitMq for messaging.
 
 ## List of projects
 
