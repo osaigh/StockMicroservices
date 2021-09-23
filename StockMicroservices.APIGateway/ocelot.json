@@ -1,0 +1,86 @@
+{
+
+  "Routes": [
+    {
+      "DownstreamPathTemplate": "/api/stock",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "stockapi",
+          "Port": 443
+        }
+      ],
+      "UpstreamPathTemplate": "/stock",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DangerousAcceptAnyServerCertificateValidator": true
+    },
+    {
+      "DownstreamPathTemplate": "/api/stockholder",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "stockapi",
+          "Port": 443
+        }
+      ],
+      "UpstreamPathTemplate": "/stockholder",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DangerousAcceptAnyServerCertificateValidator": true
+    },
+    {
+      "DownstreamPathTemplate": "/api/stockholderposition",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "stockapi",
+          "Port": 443
+        }
+      ],
+      "UpstreamPathTemplate": "/stockholderposition",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DangerousAcceptAnyServerCertificateValidator": true
+    },
+    {
+      "DownstreamPathTemplate": "/api/stockhistory/{stockId}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "stockapi",
+          "Port": 443
+        }
+      ],
+      "UpstreamPathTemplate": "/stockhistory/{stockId}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DangerousAcceptAnyServerCertificateValidator": true
+    },
+    {
+      "DownstreamPathTemplate": "/api/stockhistory",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "stockapi",
+          "Port": 443
+        }
+      ],
+      "UpstreamPathTemplate": "/stockhistory",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DangerousAcceptAnyServerCertificateValidator": true
+    },
+    {
+      "DownstreamPathTemplate": "/api/stockprice",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "stockapi",
+          "Port": 443
+        }
+      ],
+      "UpstreamPathTemplate": "/stockprice",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DangerousAcceptAnyServerCertificateValidator": true
+    }
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "http://localhost:44324"
+  }
+}

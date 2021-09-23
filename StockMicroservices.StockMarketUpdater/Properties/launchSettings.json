@@ -1,0 +1,16 @@
+{
+  "profiles": {
+    "StockMicroservices.StockMarketUpdater": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ENVIRONMENT": "local"
+      }
+    },
+    "Docker": {
+      "commandName": "Docker",
+      "environmentVariables": {
+        "Environment": "local"
+      }
+    }
+  }
+}

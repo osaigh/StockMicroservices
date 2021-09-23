@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29709.97
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StockMicroservices.IdentityServer", "StockMicroservices.IdentityServer\StockMicroservices.IdentityServer.csproj", "{D05838D9-CF7D-4740-9982-8F76EB79009C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StockMicroservices.API.Tests", "StockMicroservices.API.Tests\StockMicroservices.API.Tests.csproj", "{BFF67894-3212-40B9-883C-D086871C5CC9}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StockMicroservices.API", "StockMicroservices.API\StockMicroservices.API.csproj", "{DAAAAE67-347F-482E-905E-CD38B7C450BE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StockMicroservices.WebClient", "StockMicroservices.WebClient\StockMicroservices.WebClient.csproj", "{E192F788-CE58-4AD4-8E0D-EDA3CC40B4DD}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StockMicroservices.StockMarketUpdater", "StockMicroservices.StockMarketUpdater\StockMicroservices.StockMarketUpdater.csproj", "{15A426DE-8588-495D-997C-81C168F9A2AB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StockMicroservices.APIGateway", "StockMicroservices.APIGateway\StockMicroservices.APIGateway.csproj", "{ACF0125E-26A5-4403-871B-08B9460F3413}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D05838D9-CF7D-4740-9982-8F76EB79009C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D05838D9-CF7D-4740-9982-8F76EB79009C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D05838D9-CF7D-4740-9982-8F76EB79009C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D05838D9-CF7D-4740-9982-8F76EB79009C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BFF67894-3212-40B9-883C-D086871C5CC9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BFF67894-3212-40B9-883C-D086871C5CC9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BFF67894-3212-40B9-883C-D086871C5CC9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BFF67894-3212-40B9-883C-D086871C5CC9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DAAAAE67-347F-482E-905E-CD38B7C450BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DAAAAE67-347F-482E-905E-CD38B7C450BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DAAAAE67-347F-482E-905E-CD38B7C450BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DAAAAE67-347F-482E-905E-CD38B7C450BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E192F788-CE58-4AD4-8E0D-EDA3CC40B4DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E192F788-CE58-4AD4-8E0D-EDA3CC40B4DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E192F788-CE58-4AD4-8E0D-EDA3CC40B4DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E192F788-CE58-4AD4-8E0D-EDA3CC40B4DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{15A426DE-8588-495D-997C-81C168F9A2AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{15A426DE-8588-495D-997C-81C168F9A2AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{15A426DE-8588-495D-997C-81C168F9A2AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{15A426DE-8588-495D-997C-81C168F9A2AB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ACF0125E-26A5-4403-871B-08B9460F3413}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ACF0125E-26A5-4403-871B-08B9460F3413}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ACF0125E-26A5-4403-871B-08B9460F3413}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ACF0125E-26A5-4403-871B-08B9460F3413}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3F74A1EC-692C-43D8-BF0F-84F25A8517BE}
+	EndGlobalSection
+EndGlobal

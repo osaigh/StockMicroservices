@@ -1,0 +1,33 @@
+﻿@using IdentityServer4.Extensions
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>@ViewBag.Title</title>
+    <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
+    @RenderSection("Styles", false)
+</head>
+<body>
+    <div>
+        <header>
+            <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom" role="navigation">
+                <div class="collapse navbar-collapse">
+
+                    @if (User.IsAuthenticated())
+                    {
+                        <span>Welcome @User.GetDisplayName()</span>
+                    }
+                    <partial name="_LoginPartial" />
+                </div>
+            </nav>
+        </header>
+        <main>@RenderBody()</main>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="~/lib/popper.js/umd/popper.min.js"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>
