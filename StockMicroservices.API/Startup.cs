@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -86,7 +87,12 @@ namespace StockMicroservices.API
             //}
             //services.AddDbContext<StockDbContext>(options => options.UseSqlServer(connectionString));
 
-            services.AddDbContext<StockDbContext>(options => options.UseInMemoryDatabase("InMemoryDbFor"));
+            //services.AddDbContext<StockDbContext>(options => options.UseInMemoryDatabase("InMemoryDbFor"));
+
+            services.AddDbContext<StockDbContext>(options => options.UseSqlServer(Configuration["ConnectionString"],sqlOptions => {
+                sqlOptions.MigrationsAssembly(typeof(Startup).GetTypeInfo().Assembly.GetName().Name);
+                sqlOptions.EnableRetryOnFailure(maxRetryCount: 15, maxRetryDelay: TimeSpan.FromSeconds(30), errorNumbersToAdd: null);
+            }));
 
             //AutoMapper
             var mappingConfiguration = new MapperConfiguration(config =>

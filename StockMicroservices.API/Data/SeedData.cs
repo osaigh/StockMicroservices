@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using StockMicroservices.API.Models.Daos;
+using Microsoft.EntityFrameworkCore;
 
 namespace StockMicroservices.API.Data
 {
@@ -10,9 +11,11 @@ namespace StockMicroservices.API.Data
     {
         public static void InitializeDB(StockDbContext stockDbContext)
         {
+            stockDbContext.Database.MigrateAsync().GetAwaiter().GetResult();
             //Stocks
             if (!stockDbContext.Stocks.Any())
             {
+          
                 var microsoft = new Stock()
                 {
                     Name = "Microsoft",
