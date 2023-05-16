@@ -1,6 +1,6 @@
 {
-  "short_name": "Stock.WebClient",
-  "name": "Stock.WebClient",
+  "short_name": "StockMicroservices.WebClient",
+  "name": "StockMicroservices.WebClient",
   "icons": [
     {
       "src": "favicon.ico",

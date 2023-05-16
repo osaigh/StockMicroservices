@@ -56,7 +56,7 @@ namespace StockMicroservices.API.Services
                                     .Or<BrokerUnreachableException>()
                                     .WaitAndRetry(_retryCount, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), (ex, time) =>
                                                                                                                                 {
-                                                                                                                                    Debug.WriteLine("RabbitMQ Client could not connect after {TimeOut}s ({ExceptionMessage})", $"{time.TotalSeconds:n1}", ex.Message);
+                                                                                                                                    Debug.WriteLine("RabbitMQ Client could not connect after {0}s ({1})", $"{time.TotalSeconds}", ex.Message);
                                                                                                                                 });
             IConnection connection = null;
             policy.Execute(() =>
@@ -67,6 +67,10 @@ namespace StockMicroservices.API.Services
             if (connection == null)
             {
                 return;
+            }
+            else
+            {
+                Debug.WriteLine("Connection established");
             }
             connection = factory.CreateConnection();
             connection.ConnectionShutdown += Connection_ConnectionShutdown;

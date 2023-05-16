@@ -1,109 +1,41 @@
-version: "3.7"
+version: '3.4'
 
 services:
-  sqldata:
-    image: mcr.microsoft.com/mssql/server:2019-latest
-    container_name: sqldata
-    hostname: sqldata
-    environment:
-      - SA_PASSWORD=Qwerty@12
-      - ACCEPT_EULA=Y
-    networks:
-      - stocknetwork
-    ports:
-      - "5678:1433"
+  rabbitmq:
+    image: rabbitmq:3-management-alpine  
 
-  stockapigateway:
-    hostname: stockapigateway
-    container_name: stockapigateway
+  stockmicroservices.stockmarketupdater:
+    image: ${DOCKER_REGISTRY-}stockmarketupdater
     build:
       context: .
-      dockerfile: .\StockMicroservices.APIGateway\Dockerfile
-    networks:
-      - stocknetwork
-    ports:
-      - "44323:80"
-      - "44324:443"
-    volumes:
-      - ~/.aspnet/https:/https:ro
-    environment:
-      - ASPNETCORE_URLS=https://+;http://+
-      - ASPNETCORE_HTTPS_PORT=9001
-      - ASPNETCORE_Kestrel__Certificates__Default__Password=Anderson@1
-      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
-    depends_on:
-      - stockapi
+      dockerfile: StockMicroservices.StockMarketUpdater/Dockerfile
 
-  rabbitmqservice:
-    image: rabbitmq:3.9-management
-    hostname: rabbitmq
-    container_name: rabbitmq
-    networks:
-      - stocknetwork
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      - RABBITMQ_DEFAULT_USER=user
-      - RABBITMQ_DEFAULT_PASS=password
-
-  stockidentityserver:
+  stockmicroservices.api:
+    image: ${DOCKER_REGISTRY-}stockapi
     build:
       context: .
-      dockerfile: .\StockMicroservices.IdentityServer\Dockerfile
-    ports:
-      - "44312:80"
-      - "44313:443"
-    volumes:
-      - ~/.aspnet/https:/https:ro
-    environment:
-      - ASPNETCORE_URLS=https://+;http://+
-      - ASPNETCORE_HTTPS_PORT=8001
-      - ASPNETCORE_Kestrel__Certificates__Default__Password=Anderson@1
-      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
+      dockerfile: StockMicroservices.API/Dockerfile
 
-  stockapi:
+
+  stockmicroservices.apigateway:
+    image: ${DOCKER_REGISTRY-}stockapigateway
     build:
       context: .
-      dockerfile: .\StockMicroservices.API\Dockerfile
-    hostname: stockapi
-    container_name: stockapi
-    networks:
-      - stocknetwork
-    ports:
-      - "44376:80"
-      - "44377:443"
-    volumes:
-      - ~/.aspnet/https:/https:ro
-    environment:
-      - ASPNETCORE_URLS=https://+;http://+
-      - ASPNETCORE_HTTPS_PORT=6001
-      - ASPNETCORE_Kestrel__Certificates__Default__Password=Anderson@1
-      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
-    depends_on:
-      - sqldata
-      - rabbitmqservice
+      dockerfile: StockMicroservices.APIGateway/Dockerfile
 
-  stockwebclient:
+
+  stockmicroservices.identityserver:
+    image: ${DOCKER_REGISTRY-}stockidentityserver
     build:
       context: .
-      dockerfile: .\StockMicroservices.WebClient\ClientApp\Dockerfile
-    networks:
-      - stocknetwork
-    ports:
-      - "3000:3000"
-    depends_on:
-      - stockapigateway
+      dockerfile: StockMicroservices.IdentityServer/Dockerfile
 
-  stockmarketupdater:
+
+  stockmicroservices.webclient:
+    image: ${DOCKER_REGISTRY-}stockwebclient
     build:
       context: .
-      dockerfile: .\StockMicroservices.StockMarketUpdater\Dockerfile
-    networks:
-      - stocknetwork
-    depends_on:
-      - rabbitmqservice
+      dockerfile: StockMicroservices.WebClient/ClientApp/Dockerfile
 
-networks:
-  stocknetwork:
-    driver: bridge
+    
+  

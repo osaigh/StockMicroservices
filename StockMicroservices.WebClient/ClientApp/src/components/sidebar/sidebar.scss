@@ -1,0 +1,174 @@
+$bg-color: #006AC3;
+
+.sidebar{
+    position: fixed;
+    top:0;
+    left: 0;
+    width: 280px;
+    z-index: 1000;
+    border-right: 0.5px solid rgb(230,227,227);
+    min-height: 100vh;
+    background-color: $bg-color;
+    transition: .7s ease;
+    box-shadow: 2px 2px 10px 1px rgb(185, 183, 183);
+
+    
+    
+    &.hide{
+        width: 60px;
+    }
+    
+    .top{
+        
+
+        .homelink{
+            height: 50px;
+            display: flex;
+            padding-left: 15px;
+            align-items: center;
+            font-weight: 300;
+            justify-content: flex-start;
+            overflow: hidden;
+        }
+
+        .rbclogo{
+            width: 27px;
+            height: 35px;
+        }
+        .brand{
+            font-size: 20px;
+            margin-left: 15px;
+            color: white;
+        }
+    }
+
+    hr{
+        height: 0;
+        border: 0.1px solid rgb(196, 192, 192);
+    }
+
+    .center{
+        padding-left: 10px;
+        padding-right: 10px;
+        ul{
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            .title{
+                font-size: 10px;
+                font-weight: 200;
+                color: white;
+                margin-top: 15px;
+                margin-bottom: 5px;
+            }
+
+            li{
+                display: flex;
+                font-weight: 300;
+                align-items: center;
+                padding: 5px;
+                margin-left: 5px;
+                margin-right: 5px;
+                cursor: pointer;
+                overflow: hidden;
+                border-radius: 4px;
+                &:hover{
+                    background-color: rgba($color: whitesmoke, $alpha: 0.2)
+                }
+
+                .icon{
+                    font-size: 18px;
+                    color: white;
+                }
+
+                span{
+                    white-space: nowrap;
+                    font-size: 16px;
+                    
+                    color: white;
+                    margin-left: 15px;
+                    overflow: hidden;
+                }
+
+                
+            }
+        }
+    }
+
+    .bottom{
+        display: flex;
+        align-items: center;
+        margin: 10px;
+
+        .colorOption{
+            width:20px;
+            height: 20px;
+            border-radius: 5px;
+            border: 1px solid #7451f8;
+            cursor: pointer;
+            margin: 5px;
+
+            &:nth-child(1){
+                background-color: whitesmoke;
+            }
+
+            &:nth-child(2){
+                background-color: #333;
+            }
+
+        }
+    }
+}
+
+.hideheading{
+    visibility: collapse;
+}
+
+.hidebrand{
+    visibility: collapse;
+}
+
+
+/* Media Query for low resolution  Tablets, Ipads */
+@media (max-width: 767px) {
+    .sidebar{       
+        width: 0px;
+        left: 0;
+        top: 0;
+        .top{
+            .brand{
+                visibility: collapse;
+            }
+        }
+
+        .center{
+            ul{
+                .title{
+                    visibility: collapse;
+                }
+            }
+        }
+        &.show{
+            width: 280px;
+
+            .top{
+                .brand{
+                    visibility: visible;
+                }
+            }
+    
+            .center{
+                ul{
+                    .title{
+                        visibility: visible;
+                    }
+                }
+            }
+        }
+
+    }
+
+   
+}
+  

@@ -1,36 +1,30 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
     <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
     <TypeScriptToolsVersion>Latest</TypeScriptToolsVersion>
     <IsPackable>false</IsPackable>
     <SpaRoot>ClientApp\</SpaRoot>
     <DefaultItemExcludes>$(DefaultItemExcludes);$(SpaRoot)node_modules\**</DefaultItemExcludes>
+    <SpaProxyServerUrl>http://localhost:44100</SpaProxyServerUrl>
+    <SpaProxyLaunchCommand>npm start</SpaProxyLaunchCommand>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <DockerComposeProjectPath>..\docker-compose.dcproj</DockerComposeProjectPath>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="3.1.17" />
+    <PackageReference Include="Microsoft.AspNetCore.SpaProxy" Version="6.0.6" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
   </ItemGroup>
 
   <ItemGroup>
     <!-- Don't publish the SPA source files, but do show them in the project files list -->
-    <Compile Remove="ClientApp\src\container\**" />
     <Content Remove="$(SpaRoot)**" />
-    <Content Remove="ClientApp\src\container\**" />
-    <EmbeddedResource Remove="ClientApp\src\container\**" />
     <None Remove="$(SpaRoot)**" />
-    <None Remove="ClientApp\src\container\**" />
     <None Include="$(SpaRoot)**" Exclude="$(SpaRoot)node_modules\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="ClientApp\src\components\" />
-    <Folder Include="ClientApp\src\configuration\" />
-    <Folder Include="ClientApp\src\context\" />
-    <Folder Include="ClientApp\src\lib\" />
-    <Folder Include="ClientApp\src\services\" />
-    <Folder Include="ClientApp\src\pages\" />
   </ItemGroup>
 
   <Target Name="DebugEnsureNodeEnv" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SpaRoot)node_modules') ">
@@ -52,11 +46,14 @@
     <ItemGroup>
       <DistFiles Include="$(SpaRoot)build\**" />
       <ResolvedFileToPublish Include="@(DistFiles->'%(FullPath)')" Exclude="@(ResolvedFileToPublish)">
-        <RelativePath>%(DistFiles.Identity)</RelativePath>
+        <RelativePath>wwwroot\%(RecursiveDir)%(FileName)%(Extension)</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
         <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       </ResolvedFileToPublish>
     </ItemGroup>
   </Target>
 
+  <ItemGroup>
+    <None Update="..\.dockerignore" Link="ClientApp\.dockerignore" />
+  </ItemGroup>
 </Project>

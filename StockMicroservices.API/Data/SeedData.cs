@@ -11,7 +11,7 @@ namespace StockMicroservices.API.Data
     {
         public static void InitializeDB(StockDbContext stockDbContext)
         {
-            stockDbContext.Database.MigrateAsync().GetAwaiter().GetResult();
+            
             //Stocks
             if (!stockDbContext.Stocks.Any())
             {

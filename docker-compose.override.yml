@@ -1,0 +1,71 @@
+version: '3.4'
+
+services:
+  rabbitmq:
+    container_name: rabbitmq
+    hostname: rabbitmq
+    restart: always
+    environment:
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=password
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    
+  stockmicroservices.stockmarketupdater:
+    container_name: stockmarketupdater
+    depends_on:
+      - rabbitmq
+    environment:
+      - RabbitMq:RetryCount=5
+      - RabbitMq:Hostname=rabbitmq
+      - RabbitMq:Username=user
+      - RabbitMq:Password=password
+
+  stockmicroservices.api:
+    container_name: stockapi
+    depends_on:
+      - rabbitmq
+      - stockmicroservices.identityserver
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - APIScope=StockMicroservicesAPI
+      - IdentityServerUrl=http://stockidentityserver
+      - RabbitMq:RetryCount=5
+      - RabbitMq:Hostname=rabbitmq
+      - RabbitMq:Username=user
+      - RabbitMq:Password=password
+    ports:
+      - "44300:80"
+
+  stockmicroservices.apigateway:
+    container_name: stockapigateway
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - IdentityServerUrl=http://stockidentityserver
+      - APIScope=StockMicroservicesAPI
+    ports:
+      - "44405:80"
+    depends_on:
+      - stockmicroservices.api
+
+  stockmicroservices.identityserver:
+    container_name: stockidentityserver
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+
+    ports:
+      - "44401:80"
+  
+
+  stockmicroservices.webclient:
+    container_name: stockwebclient
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      - stockmicroservices.api
+      - stockmicroservices.identityserver
+    ports:
+      - "44100:44100"
+   
+

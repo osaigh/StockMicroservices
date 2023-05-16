@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -53,6 +54,7 @@ namespace StockMicroservices.StockMarketUpdater
             var factory = new ConnectionFactory(){HostName = _hostname, UserName = _username, Password = _password};
             var policy = RetryPolicy.Handle<SocketException>()
                                     .Or<BrokerUnreachableException>()
+                                    .Or<Exception>()
                                     .WaitAndRetry(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), (ex, time) =>
                                                                                                                                                                  {
                                                                                                                                                                      Console.WriteLine("RabbitMQ Client could not connect: Retrying");
@@ -65,6 +67,10 @@ namespace StockMicroservices.StockMarketUpdater
             if (connection == null)
             {
                 return;
+            }
+            else
+            {
+                Debug.WriteLine("Connection established");
             }
             using (var channel = connection.CreateModel())
             {

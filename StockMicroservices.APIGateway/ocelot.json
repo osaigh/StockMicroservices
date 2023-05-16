@@ -3,84 +3,108 @@
   "Routes": [
     {
       "DownstreamPathTemplate": "/api/stock",
-      "DownstreamScheme": "https",
+      "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
           "Host": "stockapi",
-          "Port": 443
+          "Port": 80
         }
       ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
       "UpstreamPathTemplate": "/stock",
       "UpstreamHttpMethod": [ "GET" ],
       "DangerousAcceptAnyServerCertificateValidator": true
     },
     {
       "DownstreamPathTemplate": "/api/stockholder",
-      "DownstreamScheme": "https",
+      "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
           "Host": "stockapi",
-          "Port": 443
+          "Port": 80
         }
       ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
       "UpstreamPathTemplate": "/stockholder",
       "UpstreamHttpMethod": [ "GET" ],
       "DangerousAcceptAnyServerCertificateValidator": true
     },
     {
       "DownstreamPathTemplate": "/api/stockholderposition",
-      "DownstreamScheme": "https",
+      "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
           "Host": "stockapi",
-          "Port": 443
+          "Port": 80
         }
       ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
       "UpstreamPathTemplate": "/stockholderposition",
       "UpstreamHttpMethod": [ "GET" ],
       "DangerousAcceptAnyServerCertificateValidator": true
     },
     {
       "DownstreamPathTemplate": "/api/stockhistory/{stockId}",
-      "DownstreamScheme": "https",
+      "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
           "Host": "stockapi",
-          "Port": 443
+          "Port": 80
         }
       ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
       "UpstreamPathTemplate": "/stockhistory/{stockId}",
       "UpstreamHttpMethod": [ "GET" ],
       "DangerousAcceptAnyServerCertificateValidator": true
     },
     {
       "DownstreamPathTemplate": "/api/stockhistory",
-      "DownstreamScheme": "https",
+      "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
           "Host": "stockapi",
-          "Port": 443
+          "Port": 80
         }
       ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
       "UpstreamPathTemplate": "/stockhistory",
       "UpstreamHttpMethod": [ "GET" ],
       "DangerousAcceptAnyServerCertificateValidator": true
     },
     {
       "DownstreamPathTemplate": "/api/stockprice",
-      "DownstreamScheme": "https",
+      "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
           "Host": "stockapi",
-          "Port": 443
+          "Port": 80
         }
       ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
       "UpstreamPathTemplate": "/stockprice",
       "UpstreamHttpMethod": [ "GET" ],
       "DangerousAcceptAnyServerCertificateValidator": true
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "http://localhost:44324"
+    "BaseUrl": "http://localhost:44405"
   }
 }

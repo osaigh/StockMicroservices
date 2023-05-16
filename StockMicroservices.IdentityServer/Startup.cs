@@ -37,7 +37,7 @@ namespace StockMicroservices.IdentityServer
         {
             var assembly = typeof(Startup).Assembly.GetName().Name;
             //var filePath = Path.Combine(_environment.ContentRootPath, "stock.pfx");
-            var cert = new X509Certificate2("stock.pfx", "password");
+            var cert = new X509Certificate2("stock.pfx", "Password@1");
             services.AddControllersWithViews();
             services.AddDataProtection()
                     .PersistKeysToFileSystem(new System.IO.DirectoryInfo(@"/var"))
@@ -57,36 +57,30 @@ namespace StockMicroservices.IdentityServer
                     .AddEntityFrameworkStores<ApplicationDbContext>()
                     .AddDefaultTokenProviders();
 
-            services.ConfigureApplicationCookie(config =>
-                                                {
-                                                    config.Cookie.Name = "Identity.Cookie";
-                                                    config.LoginPath = "/Home/Login";
-                                                    config.LogoutPath = "/Home/Logout";
-                                                    config.Cookie.SameSite = SameSiteMode.None;
-                                                    config.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
-                                                });
+            //services.ConfigureApplicationCookie(config =>
+            //                                    {
+            //                                        config.Cookie.Name = "Identity.Cookie";
+            //                                        config.LoginPath = "/Home/Login";
+            //                                        config.LogoutPath = "/Home/Logout";
+            //                                        config.Cookie.SameSite = SameSiteMode.Lax;
+            //                                        config.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+            //                                    });
 
-            services.ConfigureNonBreakingSameSiteCookies();
-
-            services.AddIdentityServer()
+            services.AddIdentityServer(cf =>
+            {
+                cf.UserInteraction.LoginUrl = "/Home/Login";
+                cf.UserInteraction.LogoutUrl = "/Home/Logout";
+                cf.Authentication.CookieLifetime = TimeSpan.FromHours(6);
+            })
                     .AddAspNetIdentity<ApplicationUser>()
-                    //.AddConfigurationStore(options =>
-                    //                       {
-                    //                           options.ConfigureDbContext = b => b.UseSqlServer(connectionString,
-                    //                                                                            sql => sql.MigrationsAssembly(migrationsAssembly));
-                    //                       })
-                    //.AddOperationalStore(options =>
-                    //                     {
-                    //                         options.ConfigureDbContext = b => b.UseSqlServer(connectionString,
-                    //                                                                          sql => sql.MigrationsAssembly(migrationsAssembly));
-                    //                     })
                     .AddSigningCredential(cert)
                     .AddInMemoryApiResources(IdentityServerConfiguration.GetApis())
+                    .AddInMemoryApiScopes(IdentityServerConfiguration.GetApiScopes())
                     .AddInMemoryIdentityResources(IdentityServerConfiguration.GetIdentityResources())
                     .AddInMemoryClients(IdentityServerConfiguration.GetClients());
                     //.AddDeveloperSigningCredential();
 
-            services.ConfigureCorsPolicy(new List<string>() { "https://localhost:44382", "https://localhost:3000" }, Configuration);
+            services.ConfigureCorsPolicy(new List<string>() { "http://localhost:44300", "http://localhost:44100", "http://localhost:44200", "http://localhost:44405" }, Configuration);
 
             
         }
@@ -105,16 +99,29 @@ namespace StockMicroservices.IdentityServer
             {
                 app.UseExceptionHandler("/Home/Error");
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                app.UseHsts();
+                //app.UseHsts();
             }
-            app.UseCookiePolicy();
-            app.UseHttpsRedirection();
+         
             app.UseStaticFiles();
+
+            app.Use(async (context, next) =>
+            {
+                context.Response.Headers.Add("Content-Security-Policy", "script-src 'unsafe-inline'");
+                await next();
+            });
+
+            
+            // Adds IdentityServer
+            app.UseIdentityServer();
+
+            // Fix a problem with chrome. Chrome enabled a new feature "Cookies without SameSite must be secure", 
+            // the cookies should be expired from https, but in eShop, the internal communication in aks and docker compose is http.
+            // To avoid this problem, the policy of cookies should be in Lax mode.
+            app.UseCookiePolicy(new CookiePolicyOptions { MinimumSameSitePolicy = SameSiteMode.Lax});
 
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
-            app.UseIdentityServer();
 
             app.UseEndpoints(endpoints =>
                              {

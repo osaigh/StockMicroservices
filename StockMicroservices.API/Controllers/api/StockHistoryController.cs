@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using StockMicroservices.API.Repository;
@@ -11,6 +12,7 @@ using DTOStockHistory = StockMicroservices.API.Models.Dtos.StockHistory;
 
 namespace StockMicroservices.API.Controllers.api
 {
+    [Authorize("StockAPIPolicy")]
     [Route("api/[controller]")]
     [ApiController]
     public class StockHistoryController : ControllerBase

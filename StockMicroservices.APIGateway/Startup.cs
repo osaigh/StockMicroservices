@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
+using Microsoft.IdentityModel.Tokens;
 
 namespace StockMicroservices.APIGateway
 {
@@ -29,7 +30,34 @@ namespace StockMicroservices.APIGateway
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            //var authenticationProviderKey = "stockIdentitykey";
+            string identityServerUrl = Configuration.GetValue(typeof(string), "IdentityServerUrl").ToString();
+            string apiScope = Configuration.GetValue(typeof(string), "APIScope").ToString();
+            services.AddAuthentication(options => options.DefaultScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme)
+                 .AddJwtBearer("Bearer", config =>
+                 {
+                     config.Authority = identityServerUrl;
+                     config.RequireHttpsMetadata = false;
+                     config.Audience = apiScope;
+                     config.TokenValidationParameters = new TokenValidationParameters
+                     {
+                         ValidateAudience = false,
+                         ValidateIssuer = false
+                     };
+                 });
+
             services.AddOcelot();
+            services.AddCors(config =>
+            {
+                config.AddPolicy("AllowAll",
+                                 p =>
+                                 {
+                                     p.AllowAnyOrigin();
+                                     p.AllowAnyHeader();
+                                     p.AllowAnyMethod();
+
+                                 });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -55,9 +83,19 @@ namespace StockMicroservices.APIGateway
                                                      });
                                     });
 
-            app.UseHttpsRedirection();
-            //app.UseAuthentication();
+            //app.UseHttpsRedirection();
+            app.UseAuthentication();
+            app.UseRouting();
+            app.UseCors("AllowAll");
             app.UseOcelot();
+            //app.UseOcelot(new OcelotPipelineConfiguration
+            //{
+            //    AuthenticationMiddleware = async (cpt, est) =>
+            //    {
+            //        Console.WriteLine("Ocelot Auth");
+            //        await est.Invoke();
+            //    }
+            //});
         }
     }
 }

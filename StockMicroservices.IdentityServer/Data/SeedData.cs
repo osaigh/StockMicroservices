@@ -18,8 +18,7 @@ namespace StockMicroservices.IdentityServer.Data
         {
             using (var serviceScope = serviceProvider.GetService<IServiceScopeFactory>().CreateScope())
             {
-                //serviceScope.ServiceProvider.GetRequiredService<PersistedGrantDbContext>().Database.Migrate();
-
+               
                 //test user
                 var appDbContext = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                 if (!appDbContext.Users.Any())
@@ -27,47 +26,15 @@ namespace StockMicroservices.IdentityServer.Data
                     var userManager = serviceScope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
                     var user = new ApplicationUser()
                     {
-                        UserName = "Steam",
-                        FirstName = "Steam ",
-                        LastName = "Jack",
+                        UserName = "bob",
+                        FirstName = "Bob",
+                        LastName = "Stack",
                     };
-                    userManager.CreateAsync(user, "Qwert@1").GetAwaiter().GetResult();
-                    //userManager.AddClaimAsync(user, new Claim("meth", "big-things")).GetAwaiter().GetResult();
+                    userManager.CreateAsync(user, "password").GetAwaiter().GetResult();
+                    userManager.AddClaimAsync(user, new Claim("meth", "big-things")).GetAwaiter().GetResult();
                 }
 
-                if (isInMemoryDatabase)
-                {
-                    return;
-                }
-                //config
-                var context = serviceScope.ServiceProvider.GetRequiredService<ConfigurationDbContext>();
-                context.Database.Migrate();
-                if (!context.Clients.Any())
-                {
-                    foreach (var client in IdentityServerConfiguration.GetClients())
-                    {
-                        context.Clients.Add(client.ToEntity());
-                    }
-                    context.SaveChanges();
-                }
-
-                if (!context.IdentityResources.Any())
-                {
-                    foreach (var resource in IdentityServerConfiguration.GetIdentityResources())
-                    {
-                        context.IdentityResources.Add(resource.ToEntity());
-                    }
-                    context.SaveChanges();
-                }
-
-                if (!context.ApiResources.Any())
-                {
-                    foreach (var resource in IdentityServerConfiguration.GetApis())
-                    {
-                        context.ApiResources.Add(resource.ToEntity());
-                    }
-                    context.SaveChanges();
-                }
+                
             }
         }
     }

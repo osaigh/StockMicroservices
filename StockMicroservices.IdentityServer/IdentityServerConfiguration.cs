@@ -12,7 +12,12 @@ namespace StockMicroservices.IdentityServer
     {
         public static IEnumerable<ApiResource> GetApis()
         {
-            return new List<ApiResource>() {  new ApiResource("StockMicroservicesAPI") };
+            return new List<ApiResource>() { new ApiResource("ApiOne"), new ApiResource("ApiTwo"), new ApiResource("StockMicroservicesAPI") };
+        }
+
+        public static IEnumerable<ApiScope> GetApiScopes()
+        {
+            return new List<ApiScope>() { new ApiScope("ApiOne"), new ApiScope("ApiTwo"), new ApiScope("StockMicroservicesAPI") };
         }
 
         public static IEnumerable<IdentityResource> GetIdentityResources()
@@ -31,28 +36,30 @@ namespace StockMicroservices.IdentityServer
                                          new Client()
                                          {
                                              ClientId = "client_id_react",
-                                             RedirectUris = { "https://localhost:44382/SignInCallback" },
-                                             PostLogoutRedirectUris = { "https://localhost:44382/SignOutCallback" },
+                                             RedirectUris = { "http://localhost:44100/SignInCallback" },
+                                             PostLogoutRedirectUris = { "http://localhost:44100/SignOutCallback" },
                                              AllowedGrantTypes = GrantTypes.Implicit,
                                              AllowedScopes = {IdentityServerConstants.StandardScopes.OpenId, IdentityServerConstants.StandardScopes.Profile, IdentityServerConstants.StandardScopes.Email, "StockMicroservicesAPI"},
                                              AllowAccessTokensViaBrowser = true,
+                                             AllowOfflineAccess = true,
                                              RequireClientSecret = false,
                                              RequireConsent = false,
-                                             AllowedCorsOrigins = { "https://localhost:44382" },
-                                             AccessTokenLifetime = 1,
+                                             AllowedCorsOrigins = { "http://localhost:44100" },
+                                             AccessTokenLifetime = 86400,
                                          },
                                          new Client()
                                          {
                                              ClientId = "client_id_react2",
-                                             RedirectUris = { "https://localhost:3000/SignInCallback" },
-                                             PostLogoutRedirectUris = { "https://localhost:3000/SignOutCallback" },
+                                             RedirectUris = { "http://localhost:3000/SignInCallback" },
+                                             PostLogoutRedirectUris = { "http://localhost:3000/SignOutCallback" },
                                              AllowedGrantTypes = GrantTypes.Implicit,
                                              AllowedScopes = {IdentityServerConstants.StandardScopes.OpenId, IdentityServerConstants.StandardScopes.Profile, IdentityServerConstants.StandardScopes.Email, "StockMicroservicesAPI"},
                                              AllowAccessTokensViaBrowser = true,
+                                             AllowOfflineAccess = true,
                                              RequireClientSecret = false,
                                              RequireConsent = false,
-                                             AllowedCorsOrigins = { "https://localhost:3000" },
-                                             AccessTokenLifetime = 1,
+                                             AllowedCorsOrigins = { "http://localhost:3000" },
+                                             AccessTokenLifetime = 86400,
                                          },
 
                                      };

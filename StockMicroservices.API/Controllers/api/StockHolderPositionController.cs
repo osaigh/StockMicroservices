@@ -14,7 +14,7 @@ using DTOStockHolderPosition = StockMicroservices.API.Models.Dtos.StockHolderPos
 
 namespace StockMicroservices.API.Controllers.api
 {
-    //[Authorize("StockAPIPolicy")]
+    [Authorize("StockAPIPolicy")]
     [Route("api/[controller]")]
     [ApiController]
     public class StockHolderPositionController : ControllerBase

@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
@@ -30,13 +32,13 @@ namespace StockMicroservices.API
 {
     public class Startup
     {
-        public IWebHostEnvironment WebHostEnvironment { get; }
-        public IConfiguration Configuration { get; }
+        public IWebHostEnvironment _WebHostEnvironment { get; }
+        public IConfiguration _Configuration { get; }
 
         public Startup(IConfiguration configuration, IWebHostEnvironment webHostEnvironment)
         {
-            Configuration = configuration;
-            WebHostEnvironment = webHostEnvironment;
+            _Configuration = configuration;
+            _WebHostEnvironment = webHostEnvironment;
         }
 
         // This method gets called by the runtime. Use this method to add services to the container.
@@ -44,28 +46,38 @@ namespace StockMicroservices.API
         {
             services.AddControllers();
 
-            ////Database
-            //string connectionString = _Configuration.GetConnectionString("DefaultConnection");
+            string identityServerUrl = _Configuration.GetValue(typeof(string), "IdentityServerUrl").ToString();
+            string apiScope = _Configuration.GetValue(typeof(string), "APIScope").ToString();
 
-            //services.AddAuthentication("Bearer")
-            //        .AddJwtBearer("Bearer",
-            //                      config =>
-            //                      {
-            //                          config.Authority = "https://localhost:44376/";
-            //                          config.Audience = "StockAPI";
-            //                      });
+            Console.WriteLine("identityServerUrl "+ identityServerUrl);
+            Debug.WriteLine("identityServerUrl " + identityServerUrl);
+            //To run Stock.API.Test comeent out lines 47 - 64 and comment out the Authorization headers on the controllers
+            services.AddAuthentication(options => options.DefaultScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme)
+                    .AddJwtBearer("Bearer",
+                                  config =>
+                                  {
+                                      config.Authority = identityServerUrl;
+                                      config.Audience = apiScope;
+                                      config.RequireHttpsMetadata = false;
+                                      config.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters()
+                                      {
+                                          ValidateAudience = false,
+                                          ValidateIssuer = false
+                                      };
+                                  });
 
-            //services.AddAuthorization(options =>
-            //                          {
-            //                              options.AddPolicy("StockAPIPolicy",
-            //                                                policy =>
-            //                                                {
-            //                                                    policy.AuthenticationSchemes.Add("Bearer");
-            //                                                    policy.RequireScope("StockAPI");
-            //                                                });
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("StockAPIPolicy",
+                                  policy =>
+                                  {
+                                      policy.AuthenticationSchemes.Add("Bearer");
+                                      policy.AddRequirements(new StockMicroservices.API.Authorization.StockAPIRequirement(apiScope));
+                                  });
 
-            //                          });
+            });
 
+            services.AddScoped<IAuthorizationHandler, StockMicroservices.API.Authorization.StockAPIRequirementHandler>();
             services.AddCors(config =>
             {
                 config.AddPolicy("AllowAll",
@@ -78,21 +90,7 @@ namespace StockMicroservices.API
                                  });
             });
 
-            //if (_WebHostEnvironment.IsDevelopment())
-            //{
-            //    if (connectionString.Contains("%CONTENTROOTPATH%"))
-            //    {
-            //        connectionString = connectionString.Replace("%CONTENTROOTPATH%", _WebHostEnvironment.ContentRootPath);
-            //    }
-            //}
-            //services.AddDbContext<StockDbContext>(options => options.UseSqlServer(connectionString));
-
-            //services.AddDbContext<StockDbContext>(options => options.UseInMemoryDatabase("InMemoryDbFor"));
-
-            services.AddDbContext<StockDbContext>(options => options.UseSqlServer(Configuration["ConnectionString"],sqlOptions => {
-                sqlOptions.MigrationsAssembly(typeof(Startup).GetTypeInfo().Assembly.GetName().Name);
-                sqlOptions.EnableRetryOnFailure(maxRetryCount: 15, maxRetryDelay: TimeSpan.FromSeconds(30), errorNumbersToAdd: null);
-            }));
+            services.AddDbContext<StockDbContext>(options => options.UseInMemoryDatabase("InMemoryDbFor"));
 
             //AutoMapper
             var mappingConfiguration = new MapperConfiguration(config =>
@@ -150,10 +148,15 @@ namespace StockMicroservices.API
                     IExceptionHandlerFeature contextFeature = context.Features.Get<IExceptionHandlerFeature>();
                     if (contextFeature != null)
                     {
+                        var message = (contextFeature.Error != null) ? contextFeature.Error.Message : "Internal Server Error (500)";
+                        if(contextFeature.Endpoint != null)
+                        {
+                            message += String.Format(" {0}", contextFeature.Endpoint);
+                        }
 
                         var errorMessage = new ErrorMessage
                         {
-                            Message = (contextFeature.Error != null) ? contextFeature.Error.Message : "Internal Server Error",
+                            Message = message,
                             StackTrace = (contextFeature.Error != null) ? contextFeature.Error.StackTrace : string.Empty
                         };
 
@@ -164,15 +167,15 @@ namespace StockMicroservices.API
                 });
             });
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
 
             app.UseCors("AllowAll");
 
             app.UseRouting();
 
-            //app.UseAuthentication();
+            app.UseAuthentication();
 
-            //app.UseAuthorization();
+            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {

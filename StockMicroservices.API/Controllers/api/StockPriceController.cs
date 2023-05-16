@@ -14,7 +14,7 @@ using DTOStockPrice = StockMicroservices.API.Models.Dtos.StockPrice;
 
 namespace StockMicroservices.API.Controllers.api
 {
-    //[Authorize("StockAPIPolicy")]
+    [Authorize("StockAPIPolicy")]
     [Route("api/[controller]")]
     [ApiController]
     public class StockPriceController : ControllerBase
