@@ -29,6 +29,11 @@ A project demonstrating various web technologies and techniques. This StockMicro
 * A c# console application that periodically updates the Stocks data.
 
 
+## How to Run
+
+Select docker-compose from the 'Startup Projects' toolbar and run 'Docker Compose'
+
+
 
 
 
