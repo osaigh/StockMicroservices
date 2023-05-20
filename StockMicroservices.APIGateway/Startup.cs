@@ -84,9 +84,9 @@ namespace StockMicroservices.APIGateway
                                     });
 
             //app.UseHttpsRedirection();
-            app.UseAuthentication();
-            app.UseRouting();
             app.UseCors("AllowAll");
+            app.UseRouting();
+            app.UseAuthentication();
             app.UseOcelot();
             //app.UseOcelot(new OcelotPipelineConfiguration
             //{

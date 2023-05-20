@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stockmarketupdater
+spec:
+  selector:
+    matchLabels:
+      app: stockmarketupdater
+  template:
+    metadata:
+      labels:
+        app: stockmarketupdater
+    spec:
+      containers:
+      - name: stockmarketupdater
+        image: osahile/stockmarketupdater
+        env:
+          - name: RabbitMq__RetryCount
+            value: '5'
+          - name: RabbitMq__Hostname
+            value: rabbitmq
+          - name: RabbitMq__Username
+            valueFrom:
+              secretKeyRef:
+                name: stock-secret
+                key: rabbitmq_user
+          - name: RabbitMq__Password
+            valueFrom:
+              secretKeyRef:
+                name: stock-secret
+                key: rabbitmq_password
+        ports:
+        - containerPort: 80

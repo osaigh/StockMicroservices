@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stockapigateway
+spec:
+  selector:
+    matchLabels:
+      app: stockapigateway
+  template:
+    metadata:
+      labels:
+        app: stockapigateway
+    spec:
+      containers:
+      - name: stockapigateway
+        image: osahile/stockapigateway
+        env:
+          - name: ASPNETCORE_ENVIRONMENT
+            valueFrom:
+              configMapKeyRef:
+                name: stock-config
+                key: stockapigateway_env
+          - name: APIScope
+            valueFrom:
+              configMapKeyRef:
+                name: stock-config
+                key: stockapi_apiscope
+          - name: IdentityServerUrl
+            valueFrom:
+              configMapKeyRef:
+                name: stock-config
+                key: identityserverurl
+        ports:
+        - containerPort: 80

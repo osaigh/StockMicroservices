@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: stock-config
+data:
+  stockwebclient_env: Development
+  stockidentityserver_env: Development
+  stockapigateway_env: Development
+  identityserverurl: http://stockidentityserver:44401
+  stockapi_env: Development
+  stockapi_apiscope: StockMicroservicesAPI
+

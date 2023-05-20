@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stockidentityserver
+spec:
+  selector:
+    matchLabels:
+      app: stockidentityserver
+  template:
+    metadata:
+      labels:
+        app: stockidentityserver
+    spec:
+      containers:
+      - name: stockidentityserver
+        image: osahile/stockidentityserver
+        env:
+          - name: ASPNETCORE_ENVIRONMENT
+            valueFrom:
+              configMapKeyRef:
+                name: stock-config
+                key: stockidentityserver_env
+          - name: ASPNETCORE_URLS
+            value: http://+
+        ports:
+        - containerPort: 80

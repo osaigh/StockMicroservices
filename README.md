@@ -31,7 +31,17 @@ A project demonstrating various web technologies and techniques. This StockMicro
 
 ## How to Run
 
-Ensure that you have .NET 6.0, Node js and Docker Desktop installed. Select docker-compose from the 'Startup Projects' toolbar and run 'Docker Compose'
+Ensure that you have .NET 6.0, Node js and Docker Desktop installed. 
+
+* Select docker-compose from the 'Startup Projects' toolbar and run 'Docker Compose' or within the solution directory, open a command prompt and run 'docker-compose up'.
+* Navigate to a browser window and go to the address 'http://localhost:44100'. This opens the React web client
+
+To run the kubernetes example, ensure you have installed and configured a minikube cluster. 
+
+* Navigate to the solution directory and open a command prompt
+* Start the minibube cluster with 'minikube start'
+* Run the command 'kubectl apply -f k8'. This will create all the necessary deployments, services, secrets and configmap objects.
+* To stop run the command 'kubectl delete -f k8'. To stop the cluster run 'minikube stop' 
 
 
 

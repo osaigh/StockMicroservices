@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stockapi
+spec:
+  selector:
+    matchLabels:
+      app: stockapi
+  template:
+    metadata:
+      labels:
+        app: stockapi
+    spec:
+      containers:
+      - name: stockapi
+        image: osahile/stockapi
+        env:
+          - name: ASPNETCORE_ENVIRONMENT
+            valueFrom:
+              configMapKeyRef:
+                name: stock-config
+                key: stockapi_env
+          - name: APIScope
+            valueFrom:
+              configMapKeyRef:
+                name: stock-config
+                key: stockapi_apiscope
+          - name: IdentityServerUrl
+            valueFrom:
+              configMapKeyRef:
+                name: stock-config
+                key: identityserverurl
+          - name: RabbitMq__RetryCount
+            value: '5'
+          - name: RabbitMq__Hostname
+            value: rabbitmq
+          - name: RabbitMq__Username
+            valueFrom:
+              secretKeyRef:
+                name: stock-secret
+                key: rabbitmq_user
+          - name: RabbitMq__Password
+            valueFrom:
+              secretKeyRef:
+                name: stock-secret
+                key: rabbitmq_password
+        ports:
+        - containerPort: 80

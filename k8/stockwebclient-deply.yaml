@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stockwebclient
+spec:
+  selector:
+    matchLabels:
+      app: stockwebclient
+  template:
+    metadata:
+      labels:
+        app: stockwebclient
+    spec:
+      containers:
+      - name: stockwebclient
+        image: osahile/stockwebclient
+        env:
+          - name: ASPNETCORE_ENVIRONMENT
+            valueFrom:
+              configMapKeyRef:
+                name: stock-config
+                key: stockwebclient_env
+        ports:
+        - containerPort: 80
