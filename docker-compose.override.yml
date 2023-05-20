@@ -66,6 +66,6 @@ services:
       - stockmicroservices.api
       - stockmicroservices.identityserver
     ports:
-      - "44100:44100"
+      - "44100:80"
    
 
