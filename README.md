@@ -22,7 +22,7 @@ A project demonstrating various web technologies and techniques. This StockMicro
 
 ### StockMicroservices.WebClient
 
-* A react based web client that authenticates the user using the Stock.IdentityServer and retrieves data from the Stock.API
+* A React based web client that authenticates the user using the Stock.IdentityServer and retrieves data from the Stock.API
 
 ### StockMicroservices.StockMarketUpdater
 
@@ -41,7 +41,14 @@ To run the kubernetes example, ensure you have installed and configured a miniku
 * Navigate to the solution directory and open a command prompt
 * Start the minibube cluster with 'minikube start'
 * Run the command 'kubectl apply -f k8'. This will create all the necessary deployments, services, secrets and configmap objects.
+* Wait for about 5 minutes for all the pods to be 'Ready' since kubernetes will attempt to pull all the images from docker. To check the status of the pods, run 'kubectl get pods'
+* Once all the pods are running, you need to create a proxy to the application running within the cluster. You will need to create three proxies as follows. Open three command prompts.
+* IdentityServer - on the first command prompt, run  'kubectl port-forward svc/stockidentityserver 44401' . This binds the local port 44401 on your machine to the port 44401 of the service stockidentityserver
+* ApiGateway - on the second command prompt, run 'kubectl port-forward svc/stockapigateway 44405' . This binds the local port 44405 on your machine to the port 44405 of the service stockapigateway
+* StockWebClient(react) - on the third command prompt, 'run kubectl port-forward svc/stockwebclient 44100' . This binds the local port 44100 on your machine to the port 44100 of the service stockwebclient
+* Navigate again to a browser and go to the address 'http://localhost:44100'
 * To stop run the command 'kubectl delete -f k8'. To stop the cluster run 'minikube stop' 
+* Close all the command prompts
 
 
 
