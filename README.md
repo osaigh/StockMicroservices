@@ -31,7 +31,7 @@ A project demonstrating various web technologies and techniques. This StockMicro
 
 ## How to Run
 
-Select docker-compose from the 'Startup Projects' toolbar and run 'Docker Compose'
+Ensure that you have .NET 6.0, Node js and Docker Desktop installed. Select docker-compose from the 'Startup Projects' toolbar and run 'Docker Compose'
 
 
 
