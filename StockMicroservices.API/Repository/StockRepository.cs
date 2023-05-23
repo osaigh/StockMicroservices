@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using MongoDB.Driver.Linq;
 using StockMicroservices.API.Data;
 using DAOStock = StockMicroservices.API.Models.Daos.Stock;
 
@@ -13,15 +14,13 @@ namespace StockMicroservices.API.Repository
     public class StockRepository : IRepository<DAOStock>
     {
         #region fields
-        private readonly StockDbContext _StockDbContext;
-        private readonly IMapper _Mapper;
+        private readonly IStockDbContext _StockDbContext;
         #endregion
 
         #region Constructor
-        public StockRepository(StockDbContext stockDbContext, IMapper mapper)
+        public StockRepository(IStockDbContext stockDbContext)
         {
             _StockDbContext = stockDbContext;
-            _Mapper = mapper;
         }
         #endregion
 
@@ -33,61 +32,38 @@ namespace StockMicroservices.API.Repository
 
         public async Task<DAOStock> AddAsync(DAOStock stock)
         {
-            await _StockDbContext.Stocks.AddAsync(stock);
-            await _StockDbContext.SaveChangesAsync();
+            await _StockDbContext.CreateStockAsync(stock);
 
             return stock;
         }
 
         public async Task DeleteAsync(DAOStock stock)
         {
-            var _stock = await GetAsync(stock.Id);
-            if (_stock != null)
-            {
-                _StockDbContext.Stocks.Remove(_stock);
-                await _StockDbContext.SaveChangesAsync();
-            }
+            await _StockDbContext.RemoveStockAsync(stock.Id);
         }
 
         public async Task<IEnumerable<DAOStock>> SearchForAsync(Expression<Func<DAOStock, bool>> predicate)
         {
-            return await _StockDbContext.Stocks
-                                        //.Include(s => s.StockHistories)
-                                        .Where(predicate).ToListAsync();
+            var stocks = await _StockDbContext.GetStocksAsync();
+            return stocks.Where<DAOStock>(predicate.Compile());
+
         }
 
         public async Task<IEnumerable<DAOStock>> GetAllAsync()
         {
-            return await _StockDbContext.Stocks
-                                        //.Include(s => s.StockHistories)
-                                        .ToListAsync();
+            return await _StockDbContext.GetStocksAsync();
         }
 
         public async Task<DAOStock> GetAsync(object id)
         {
-            int key = int.Parse(id.ToString());
-            return await _StockDbContext.Stocks
-                                         //.Include(s => s.StockHistories)
-                                         .FirstOrDefaultAsync(s => s.Id == key);
+            return await _StockDbContext.GetStockByIdAsync(id.ToString());
         }
 
         public async Task<DAOStock> UpdateAsync(DAOStock stock)
         {
-            var _stock = await GetAsync(stock.Id);
+            await _StockDbContext.UpdateStockAsync(stock.Id,stock);
 
-            if (_stock == null)
-            {
-                return null;
-            }
-
-            if (!ReferenceEquals(stock, _stock))
-            {
-                _Mapper.Map(stock, _stock);
-            }
-
-            await _StockDbContext.SaveChangesAsync();
-
-            return _stock;
+            return stock;
 
         }
 

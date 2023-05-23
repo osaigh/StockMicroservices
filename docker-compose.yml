@@ -4,6 +4,12 @@ services:
   rabbitmq:
     image: rabbitmq:3-management-alpine  
 
+  mongo:
+    image: mongo
+
+  mongo-express:
+    image: mongo-express
+
   stockmicroservices.stockmarketupdater:
     image: ${DOCKER_REGISTRY-}stockmarketupdater
     build:

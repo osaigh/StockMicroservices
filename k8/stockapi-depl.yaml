@@ -44,5 +44,40 @@ spec:
               secretKeyRef:
                 name: stock-secret
                 key: rabbitmq_password
+          - name: Database__ConnectionString
+            valueFrom:
+              secretKeyRef:
+                name: stock-secret
+                key: mongo_connectionstring
+          - name: Database__AdminUser
+            valueFrom:
+              secretKeyRef:
+                name: stock-secret
+                key: mongo_admin_user
+          - name: Database__AdminPassword
+            valueFrom:
+              secretKeyRef:
+                name: stock-secret
+                key: mongo_admin_password
+          - name: Database__DbUser
+            valueFrom:
+              secretKeyRef:
+                name: stock-secret
+                key: mongo_dbuser_user
+          - name: Database__DbPassword
+            valueFrom:
+              secretKeyRef:
+                name: stock-secret
+                key: mongo_dbuser_password
+          - name: Database__Hostname
+            valueFrom:
+              configMapKeyRef:
+                name: stock-config
+                key: mongo_hostname
+          - name: Database__Name
+            valueFrom:
+              configMapKeyRef:
+                name: stock-config
+                key: mongo_database
         ports:
         - containerPort: 80

@@ -9,4 +9,6 @@ data:
   identityserverurl: http://stockidentityserver:44401
   stockapi_env: Development
   stockapi_apiscope: StockMicroservicesAPI
+  mongo_hostname: mongo
+  mongo_database: stocks
 

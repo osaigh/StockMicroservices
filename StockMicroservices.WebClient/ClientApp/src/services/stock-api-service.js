@@ -28,15 +28,15 @@ export default class StockApiService {
     return axios.put(`${this.baseURL}/${id}`, newObject);
   };
 
-    getStockHistory = (stockId, accessToken = "") => {
-        if (accessToken.length > 0) {
-            const config = {
-                headers: { Authorization: `Bearer ${accessToken}` }
-            };
-            return axios.get(this.baseURL + "stockHistory/" + stockId, config);
-        } else {
-            return axios.get(this.baseURL + "stockHistory/" + stockId);
-        }
+  //  getStockHistory = (stockId, accessToken = "") => {
+  //      if (accessToken.length > 0) {
+  //          const config = {
+  //              headers: { Authorization: `Bearer ${accessToken}` }
+  //          };
+  //          return axios.get(this.baseURL + "stockHistory/" + stockId, config);
+  //      } else {
+  //          return axios.get(this.baseURL + "stockHistory/" + stockId);
+  //      }
     
-  };
+  //};
 }

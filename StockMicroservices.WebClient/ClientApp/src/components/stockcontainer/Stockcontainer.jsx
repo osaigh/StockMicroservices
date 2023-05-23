@@ -57,14 +57,20 @@ export function StockContainer() {
       return;
     }
 
-    stockApiService.getStockHistory(stockId,stocks.user.access_token).then((response) => {
-      var stockHistoryCollection = response.data;
-      var newLineChartData = {
-        title: stock.name,
-        data: stockHistoryCollection,
+    const newLineChartData = {
+       title: stock.name,
+          data: stock.stockHistories,
       };
-      setLineChartData(newLineChartData);
-    });
+    setLineChartData(newLineChartData);
+    //  setLineChartData(newLineChartData);
+    //stockApiService.getStockHistory(stockId,stocks.user.access_token).then((response) => {
+    //  var stockHistoryCollection = response.data;
+    //  var newLineChartData = {
+    //    title: stock.name,
+    //    data: stockHistoryCollection,
+    //  };
+    //  setLineChartData(newLineChartData);
+    //});
   };
 
   var tableData = stocks.stockData.map((stock, index) => (

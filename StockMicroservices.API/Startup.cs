@@ -49,8 +49,8 @@ namespace StockMicroservices.API
             string identityServerUrl = _Configuration.GetValue(typeof(string), "IdentityServerUrl").ToString();
             string apiScope = _Configuration.GetValue(typeof(string), "APIScope").ToString();
 
-            Console.WriteLine("identityServerUrl "+ identityServerUrl);
-            Debug.WriteLine("identityServerUrl " + identityServerUrl);
+            services.AddSingleton<IStockDbContext, StockDbContext>();
+
             //To run Stock.API.Test comeent out lines 47 - 64 and comment out the Authorization headers on the controllers
             services.AddAuthentication(options => options.DefaultScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme)
                     .AddJwtBearer("Bearer",
@@ -90,7 +90,6 @@ namespace StockMicroservices.API
                                  });
             });
 
-            services.AddDbContext<StockDbContext>(options => options.UseInMemoryDatabase("InMemoryDbFor"));
 
             //AutoMapper
             var mappingConfiguration = new MapperConfiguration(config =>
@@ -110,17 +109,15 @@ namespace StockMicroservices.API
 
             //Repositories
             services.AddScoped<IRepository<StockHolder>, StockHolderRepository>();
-            services.AddScoped<IRepository<StockHolderPosition>, StockHolderPositionRepository>();
             services.AddScoped<IRepository<Stock>, StockRepository>();
-            services.AddScoped<IRepository<StockHistory>, StockHistoryRepository>();
-            services.AddScoped<IRepository<StockPrice>, StockPriceRepository>();
+            services.Configure<DatabaseSetting>(_Configuration.GetSection("Database"));
             services.AddSingleton<IStockUpdateListener, StockUpdateListener>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, StockDbContext stockDbContext, IStockUpdateListener stockUpdateListener)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IStockDbContext stockDbContext, IStockUpdateListener stockUpdateListener)
         {
-            SeedData.InitializeDB(stockDbContext);
+            SeedData.InitializeDatabase(app.ApplicationServices);
             //if (env.IsDevelopment())
             //{
             //    //app.UseDeveloperExceptionPage();

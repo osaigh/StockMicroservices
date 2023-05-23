@@ -14,12 +14,12 @@ namespace StockMicroservices.API.Services
     {
         #region Fields
         private readonly Random _random = new Random(((int)DateTime.Now.Ticks / 1000));
-        private readonly StockDbContext _StockDbContext;
+        private readonly IStockDbContext _StockDbContext;
         //private readonly IServiceProvider _serviceProvider;
         #endregion
 
         #region Constructor
-        public StockMarketService(StockDbContext stockDbContext)
+        public StockMarketService(IStockDbContext stockDbContext)
         {
             _StockDbContext = stockDbContext;
         }
@@ -29,14 +29,15 @@ namespace StockMicroservices.API.Services
         public async Task UpdateStockPrices()
         {
             //var _StockDbContext = (StockDbContext)_serviceProvider.GetService(typeof(StockDbContext));
-            var stocks = await _StockDbContext.Stocks.ToListAsync();
+            var stocks = await _StockDbContext.GetStocksAsync();
             foreach (var stock in stocks)
             {
                 double newPrice = stock.Price + Convert.ToDouble((Convert.ToDecimal(_random.NextDouble() * 10f) - 5m));
                 stock.Price = newPrice > 0 ? newPrice : 1;
+                await _StockDbContext.UpdateStockAsync(stock.Id, stock);
             }
 
-            await _StockDbContext.SaveChangesAsync();
+            
         }
 
         #endregion

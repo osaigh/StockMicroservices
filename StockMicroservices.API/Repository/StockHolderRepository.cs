@@ -13,15 +13,13 @@ namespace StockMicroservices.API.Repository
     public class StockHolderRepository : IRepository<DAOStockHolder>
     {
         #region fields
-        private readonly StockDbContext _StockDbContext;
-        private readonly IMapper _Mapper;
+        private readonly IStockDbContext _StockDbContext;
         #endregion
 
         #region Constructor
-        public StockHolderRepository(StockDbContext stockDbContext, IMapper mapper)
+        public StockHolderRepository(IStockDbContext stockDbContext)
         {
             _StockDbContext = stockDbContext;
-            _Mapper = mapper;
         }
         #endregion
 
@@ -33,63 +31,37 @@ namespace StockMicroservices.API.Repository
 
         public async Task<DAOStockHolder> AddAsync(DAOStockHolder stockHolder)
         {
-            await _StockDbContext.StockHolders.AddAsync(stockHolder);
-            await _StockDbContext.SaveChangesAsync();
+            await _StockDbContext.CreateStockHolderAsync(stockHolder);
 
             return stockHolder;
         }
 
         public async Task DeleteAsync(DAOStockHolder stockHolder)
         {
-            var _stockHolder = await GetAsync(stockHolder.Username);
-            if (_stockHolder != null)
-            {
-                _StockDbContext.StockHolders.Remove(_stockHolder);
-                await _StockDbContext.SaveChangesAsync();
-            }
+            await _StockDbContext.RemoveStockHolderAsync(stockHolder.Id);
         }
 
         public async Task<IEnumerable<DAOStockHolder>> SearchForAsync(Expression<Func<DAOStockHolder, bool>> predicate)
         {
-            return await _StockDbContext.StockHolders
-                                        .Include(s => s.StockHolderPositions)
-                                        .ThenInclude(s => s.Stock)
-                                        .Where(predicate).ToListAsync();
+            var stockHolders = await _StockDbContext.GetStockHoldersAsync();
+            return stockHolders.Where<DAOStockHolder>(predicate.Compile());
         }
 
         public async Task<IEnumerable<DAOStockHolder>> GetAllAsync()
         {
-            return await _StockDbContext.StockHolders
-                                        .Include(s => s.StockHolderPositions)
-                                        .ThenInclude(s => s.Stock)
-                                        .ToListAsync();
+            return await _StockDbContext.GetStockHoldersAsync();
         }
 
         public async Task<DAOStockHolder> GetAsync(object id)
         {
-            return await _StockDbContext.StockHolders
-                                         .Include(s => s.StockHolderPositions)
-                                         .ThenInclude(s => s.Stock)
-                                         .FirstOrDefaultAsync(s => s.Username.ToLower() == id.ToString().ToLower());
+            return await _StockDbContext.GetStockHolderByUsernameAsync(id.ToString());
         }
 
         public async Task<DAOStockHolder> UpdateAsync(DAOStockHolder stockHolder)
         {
-            var _stockHolder = await GetAsync(stockHolder.Username);
+            await _StockDbContext.UpdateStockHolderAsync(stockHolder.Id, stockHolder);
 
-            if (_stockHolder == null)
-            {
-                return null;
-            }
-
-            if (!ReferenceEquals(stockHolder, _stockHolder))
-            {
-                _Mapper.Map(stockHolder, _stockHolder);
-            }
-
-            await _StockDbContext.SaveChangesAsync();
-
-            return _stockHolder;
+            return stockHolder;
         }
 
         #endregion
