@@ -43,9 +43,9 @@ namespace StockMicroservices.API.Tests.IntegrationTests
         }
 
         [Theory]
-        [InlineData(1)]
-        [InlineData(2)]
-        public async Task Get_ValidStockId_ReturnsStock(int stockId)
+        [InlineData("e656bb6f9a358bcc3ae63c61")]
+        [InlineData("057340ee83ddedcbeef5b1ab")]
+        public async Task Get_ValidStockId_ReturnsStock(string stockId)
         {
             //Arrange
             var client = _Factory.CreateClient();
@@ -57,12 +57,12 @@ namespace StockMicroservices.API.Tests.IntegrationTests
 
             //Assert
             Assert.NotNull(stock);
-            Assert.Equal(stockId, stock.Id);
+            Assert.Equal(stockId.ToString(), stock.Id);
         }
 
         [Theory]
-        [InlineData(1098)]
-        public async Task Get_InvalidStockId_ReturnsNull(int stockId)
+        [InlineData("e6545b6f9a358bcc3ae63c63")]
+        public async Task Get_InvalidStockId_ReturnsNull(string stockId)
         {
             //Arrange
             var client = _Factory.CreateClient();

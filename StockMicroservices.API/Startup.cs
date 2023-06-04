@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
+using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
@@ -23,10 +24,12 @@ using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
 using StockMicroservices.API.Data;
 using StockMicroservices.API.Errors;
+using StockMicroservices.API.EventBusConsumer;
 using StockMicroservices.API.Models;
 using StockMicroservices.API.Models.Daos;
 using StockMicroservices.API.Repository;
 using StockMicroservices.API.Services;
+using StockMicroservices.EventBus.Common;
 
 namespace StockMicroservices.API
 {
@@ -104,25 +107,47 @@ namespace StockMicroservices.API
                                        c.SwaggerDoc("v1", new OpenApiInfo { Title = "StockAPI", Version = "v1" });
                                    });
 
+            string _hostname = _Configuration["RabbitMq:Hostname"];
+            string _username = _Configuration["RabbitMq:Username"];
+            string _password = _Configuration["RabbitMq:Password"];
+            string hostAddress = string.Format("amqp://{0}:{1}@{2}:5672", _username, _password, _hostname);
+
+            //MassTransit-RabbitMq
+            if (!_WebHostEnvironment.IsEnvironment("test"))
+            {
+                services.AddMassTransit(config =>
+                {
+                    config.AddConsumer<StockUpdateConsumer>();
+
+                    config.AddBus(provider => Bus.Factory.CreateUsingRabbitMq(cfg =>
+                    {
+                        cfg.Host(hostAddress);
+
+                        cfg.ReceiveEndpoint(EventBusConstants.STOCK_UPDATE_QUEUE, ep =>
+                        {
+                            ep.ConfigureConsumer<StockUpdateConsumer>(provider);
+                        });
+                    }));
+                });
+                services.AddMassTransitHostedService();
+            }
+
             //StockMarketService
             services.AddScoped<IStockMarketService, StockMarketService>();
 
             //Repositories
-            services.AddScoped<IRepository<StockHolder>, StockHolderRepository>();
             services.AddScoped<IRepository<Stock>, StockRepository>();
             services.Configure<DatabaseSetting>(_Configuration.GetSection("Database"));
-            services.AddSingleton<IStockUpdateListener, StockUpdateListener>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IStockDbContext stockDbContext, IStockUpdateListener stockUpdateListener)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IStockDbContext stockDbContext)
         {
-            SeedData.InitializeDatabase(app.ApplicationServices);
-            //if (env.IsDevelopment())
-            //{
-            //    //app.UseDeveloperExceptionPage();
-            //   //
-            //}
+            if (env.IsEnvironment("local") || env.IsEnvironment("development"))
+            {
+                SeedData.InitializeDatabase(app.ApplicationServices);
+            }
+
 
             app.UseSwagger();
 
@@ -131,10 +156,7 @@ namespace StockMicroservices.API
                                  c.SwaggerEndpoint("/swagger/v1/swagger.json", "StockAPI v1");
                              });
 
-            Task.Run(() =>
-                     {
-                         stockUpdateListener.StartListener();
-                     });
+            
 
             app.UseExceptionHandler(appError =>
             {

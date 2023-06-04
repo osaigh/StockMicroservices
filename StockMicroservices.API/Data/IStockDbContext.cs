@@ -10,22 +10,13 @@ namespace StockMicroservices.API.Data
 
         Task<Stock?> GetStockByIdAsync(string id);
 
+        Task<Stock?> GetStockByNameAsync(string name);
+
         Task CreateStockAsync(Stock stock);
 
         Task UpdateStockAsync(string id, Stock stock);
 
         Task RemoveStockAsync(string id);
 
-        Task<List<StockHolder>> GetStockHoldersAsync();
-
-        Task<StockHolder?> GetStockHolderByIdAsync(string id);
-
-        Task<StockHolder?> GetStockHolderByUsernameAsync(string username);
-
-        Task CreateStockHolderAsync(StockHolder stockHolder);
-
-        Task UpdateStockHolderAsync(string id, StockHolder stockHolder);
-
-        Task RemoveStockHolderAsync(string id);
     }
 }

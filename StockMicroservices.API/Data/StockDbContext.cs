@@ -14,7 +14,6 @@ namespace StockMicroservices.API.Data
     {
         #region Properties
         private readonly IMongoCollection<Stock> _stocksCollection;
-        private readonly IMongoCollection<StockHolder> _stockHoldersCollection;
         #endregion
 
         #region Constructor
@@ -27,7 +26,6 @@ namespace StockMicroservices.API.Data
             var stockDatabase = mongoClient.GetDatabase(databaseSettings.Value.Name);
 
             this._stocksCollection = stockDatabase.GetCollection<Stock>("Stock");
-            this._stockHoldersCollection = stockDatabase.GetCollection<StockHolder>("StockHolder");
         }
         #endregion
 
@@ -38,6 +36,9 @@ namespace StockMicroservices.API.Data
         public async Task<Stock?> GetStockByIdAsync(string id) =>
             await _stocksCollection.Find(x => x.Id == id).FirstOrDefaultAsync();
 
+        public async Task<Stock?> GetStockByNameAsync(string name) =>
+            await _stocksCollection.Find(x => x.Name == name).FirstOrDefaultAsync();
+
         public async Task CreateStockAsync(Stock stock) =>
             await _stocksCollection.InsertOneAsync(stock);
 
@@ -47,23 +48,6 @@ namespace StockMicroservices.API.Data
         public async Task RemoveStockAsync(string id) =>
             await _stocksCollection.DeleteOneAsync(x => x.Id == id);
 
-        public async Task<List<StockHolder>> GetStockHoldersAsync() =>
-            await _stockHoldersCollection.Find(_ => true).ToListAsync();
-
-        public async Task<StockHolder?> GetStockHolderByIdAsync(string id) =>
-            await _stockHoldersCollection.Find(x => x.Id == id).FirstOrDefaultAsync();
-
-        public async Task<StockHolder?> GetStockHolderByUsernameAsync(string username) =>
-            await _stockHoldersCollection.Find(x => x.Username == username).FirstOrDefaultAsync();
-
-        public async Task CreateStockHolderAsync(StockHolder stockHolder) =>
-            await _stockHoldersCollection.InsertOneAsync(stockHolder);
-
-        public async Task UpdateStockHolderAsync(string id, StockHolder stockHolder) =>
-            await _stockHoldersCollection.ReplaceOneAsync(x => x.Id == id, stockHolder);
-
-        public async Task RemoveStockHolderAsync(string id) =>
-            await _stockHoldersCollection.DeleteOneAsync(x => x.Id == id);
         #endregion
     }
 }

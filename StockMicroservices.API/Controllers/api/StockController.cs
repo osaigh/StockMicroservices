@@ -45,9 +45,9 @@ namespace StockMicroservices.API.Controllers.api
         }
 
         [HttpGet("{id}")]
-        public async Task<DTOStock> Get(int id)
+        public async Task<DTOStock> Get(string id)
         {
-            if (id <= 0)
+            if (string.IsNullOrEmpty(id))
             {
                 return null;
             }

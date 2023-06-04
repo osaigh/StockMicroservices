@@ -38,7 +38,7 @@ namespace StockMicroservices.API.Tests.IntegrationTests
                 RequestId = Guid.NewGuid().ToString()
             };
             string apiRequestString = JsonConvert.SerializeObject(apiRequest);
-            int stockId = 1;
+            string stockId = "e656bb6f9a358bcc3ae63c61";
             double oldPrice = 0.0;
             double newPrice = 0.0;
 
