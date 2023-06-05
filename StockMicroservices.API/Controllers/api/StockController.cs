@@ -60,7 +60,7 @@ namespace StockMicroservices.API.Controllers.api
 
             if (daoStock == null)
             {
-                return null;
+                return new BadRequestObjectResult(string.Format("No Stock with id {0}",id));
             }
 
             var dtoStock = _Mapper.Map<DTOStock>(daoStock);
