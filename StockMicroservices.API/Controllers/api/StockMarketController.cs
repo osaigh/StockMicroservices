@@ -31,9 +31,12 @@ namespace StockMicroservices.API.Controllers.api
         #region Methods
 
         [HttpPut]
-        public async Task Update([FromBody] ApiRequest apiRequest)
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesDefaultResponseType]
+        public async Task<ActionResult> Update([FromBody] ApiRequest apiRequest)
         {
             await _StockMarketService.UpdateStockPrices();
+            return NoContent();
         }
         #endregion
     }
