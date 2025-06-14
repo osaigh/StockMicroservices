@@ -31,7 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\StockMicroservices.EventBus.Common\StockMicroservices.EventBus.Common.csproj" />
+    <ProjectReference Include="..\StockMicroservices.EventBus.Common\StockMicroservices.EventBus.Common.csproj" />
   </ItemGroup>
 
 </Project>

@@ -44,10 +44,11 @@ namespace StockMicroservices.API.Tests.UnitTests
             var stockController = new StockController(mockRepo.Object, mapper);
 
             //Act
-            var stocks = await stockController.Get();
+            var result = await stockController.Get();
 
             //Assert
-            Assert.NotNull(stocks);
+            Assert.NotNull(result);
+            var stocks = result.Value;
             Assert.Equal(2, stocks.Count());
         }
 
@@ -72,11 +73,11 @@ namespace StockMicroservices.API.Tests.UnitTests
             var stockController = new StockController(mockRepo.Object, mapper);
 
             //Act
-            var stock = await stockController.Get(stockId);
+            var result = await stockController.Get(stockId);
 
             //Assert
-            Assert.NotNull(stock);
-            Assert.Equal(stockId, stock.Id);
+            Assert.NotNull(result);
+            Assert.Equal(stockId, result.Value.Id);
         }
 
         [Theory]
