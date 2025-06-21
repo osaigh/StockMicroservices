@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Net.Sockets;
+using System.Net;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using MassTransit;
 using Microsoft.Extensions.Configuration;
-using Polly;
-using Polly.Retry;
-using RabbitMQ.Client;
-using RabbitMQ.Client.Exceptions;
 using StockMicroservices.EventBus.Common.Events;
 
 namespace StockMicroservices.StockMarketUpdater
@@ -60,7 +57,7 @@ namespace StockMicroservices.StockMarketUpdater
 
             bus.Start();
             Random _random = new Random(((int)DateTime.Now.Ticks / 1000));
-
+            StartHealthCheckListener();
             while (true)
             {
                 Thread.Sleep(1000);
@@ -75,6 +72,31 @@ namespace StockMicroservices.StockMarketUpdater
                 Console.WriteLine("Publish stock "+ stockUpdated.Name + " "+ stockUpdated.Change);
                 bus.Publish(stockUpdated);
             }
+        }
+
+        void StartHealthCheckListener()
+        {
+            Task.Run(() => 
+            { 
+                var listener = new HttpListener();
+                //listener.Prefixes.Add("http://+:44444");
+                //listener.Prefixes.Add("http://0.0.0.0:44444");
+                listener.Prefixes.Add("http://*:44444/");
+                listener.Start();
+
+                while (true)
+                {
+                    var context = listener.GetContext();
+                    var response = context.Response;
+                    var buffer = Encoding.UTF8.GetBytes("OK");
+                    response.StatusCode = 200;
+                    response.OutputStream.Write(buffer, 0, buffer.Length);
+                    response.OutputStream.Close();
+                }
+            }
+            );
+            Debug.WriteLine("Health Check listening on 44444");
+            Console.WriteLine("Health Check listening on 44444");
         }
 
         //private void UpdateMarket()

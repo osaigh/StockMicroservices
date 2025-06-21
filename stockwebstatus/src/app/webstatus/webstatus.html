@@ -1,0 +1,21 @@
+<div class="health-check">
+    <h2>Service Health Status</h2>
+    <table>
+        <thead>
+            <th>Service</th>
+            <th>Status</th>
+            <th>Url</th>
+        </thead>
+        <tbody>
+            <tr *ngFor="let service of services">
+                <td>{{service.name}}</td>
+                <td [ngClass]="service.status.toLowerCase()">
+                    {{service.status}}
+                </td>
+                <td>
+                    {{service.url}}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>

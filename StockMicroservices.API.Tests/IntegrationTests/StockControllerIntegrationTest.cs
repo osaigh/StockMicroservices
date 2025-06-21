@@ -57,7 +57,7 @@ namespace StockMicroservices.API.Tests.IntegrationTests
 
             //Assert
             Assert.NotNull(stock);
-            Assert.Equal(stockId.ToString(), stock.Id);
+            Assert.Equal(stockId.ToString(), stock.Id.ToString());
         }
 
         [Theory]

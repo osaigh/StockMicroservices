@@ -15,6 +15,9 @@ using Newtonsoft.Json;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using HealthChecks.UI.Client;
 
 namespace StockMicroservices.APIGateway
 {
@@ -58,6 +61,9 @@ namespace StockMicroservices.APIGateway
 
                                  });
             });
+
+            services.AddHealthChecks()
+                .AddCheck("self", () => HealthCheckResult.Healthy());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -87,7 +93,20 @@ namespace StockMicroservices.APIGateway
             app.UseCors("AllowAll");
             app.UseRouting();
             app.UseAuthentication();
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapHealthChecks("/hc", new HealthCheckOptions()
+                {
+                    Predicate = _ => true,
+                    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+                });
+                endpoints.MapHealthChecks("/liveness", new HealthCheckOptions
+                {
+                    Predicate = r => r.Name.Contains("self")
+                });
+            });
             app.UseOcelot();
+            
             //app.UseOcelot(new OcelotPipelineConfiguration
             //{
             //    AuthenticationMiddleware = async (cpt, est) =>

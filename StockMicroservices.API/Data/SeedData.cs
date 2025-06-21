@@ -1,378 +1,177 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using StockMicroservices.API.Models.Daos;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
-using StockMicroservices.API.Models;
-using MongoDB.Driver;
-using MongoDB.Bson;
-using System.Diagnostics;
+
 
 namespace StockMicroservices.API.Data
 {
     public class SeedData
     {
-        private static List<Stock> GetStocks()
+        public static void InitializeDB(StockDbContext stockDbContext)
         {
-            List<Stock> stocks = new List<Stock>();
-
-            //Microsoft
-            var microsoft = new Stock()
-            {
-                Name = "Microsoft",
-                Price = 89,
-                Volume = 2000,
-                StockHistories = new List<StockHistory>()
-                {
-                    new StockHistory()
-                    {
-                        Price = 60,
-                        Date = new DateTimeOffset(2020, 11, 30, 0, 0, 0, TimeSpan.Zero)
-                    },              
-                    new StockHistory()
-                    {
-                        Price = 62,
-                        Date = new DateTimeOffset(2020, 12, 31, 0, 0, 0, TimeSpan.Zero)
-                    },
-                    new StockHistory()
-                    {
-                        Price = 69,
-                        Date = new DateTimeOffset(2021, 1, 31, 0, 0, 0, TimeSpan.Zero)
-                    },
-                     new StockHistory()
-                    {
-                        Price = 72,
-                        Date = new DateTimeOffset(2021, 2, 27, 0, 0, 0, TimeSpan.Zero)
-                    },
-                    new StockHistory()
-                    {
-                        Price = 80,
-                        Date = new DateTimeOffset(2021, 3, 31, 0, 0, 0, TimeSpan.Zero)
-                    },
-                    new StockHistory()
-                    {
-                        Price = 89,
-                        Date = new DateTimeOffset(2021, 4, 30, 0, 0, 0, TimeSpan.Zero)
-                    }
-                }
-            };
-
-            //Slim Stack
-            var slimStack = new Stock()
-            {
-                Name = "Slim Stack",
-                Price = 23,
-                Volume = 700,
-                StockHistories = new List<StockHistory>()
-                {
-                    new StockHistory()
-                    {
-                         Price = 20,
-                         Date = new DateTimeOffset(2020, 11, 30, 0, 0, 0, TimeSpan.Zero)
-                    },
-                    new StockHistory()
-                    {
-                        Price = 26,
-                        Date = new DateTimeOffset(2020, 12, 31, 0, 0, 0, TimeSpan.Zero)
-                    },
-                    new StockHistory()
-                    {
-                        Price = 33,
-                        Date = new DateTimeOffset(2021, 1, 31, 0, 0, 0, TimeSpan.Zero)
-                    },
-                    new StockHistory()
-                    {
-                        Price = 29,
-                        Date = new DateTimeOffset(2021, 2, 27, 0, 0, 0, TimeSpan.Zero)
-                    },
-                    new StockHistory()
-                    {
-                        Price = 19,
-                        Date = new DateTimeOffset(2021, 3, 31, 0, 0, 0, TimeSpan.Zero)
-                    },
-                    new StockHistory()
-                    {
-                        Price = 23,
-                        Date = new DateTimeOffset(2024, 4, 30, 0, 0, 0, TimeSpan.Zero)
-                    }
-                }
-            };
-
-            //Apple
-            var apple = new Stock()
-            {
-                Name = "Apple",
-                Price = 120,
-                Volume = 2400,
-                StockHistories = new List<StockHistory>()
-                {
-                     new StockHistory()
-                     {
-                         Price = 80,
-                         Date = new DateTimeOffset(2020, 11, 30, 0, 0, 0, TimeSpan.Zero)
-                     },
-                    new StockHistory()
-                    {
-                        Price = 85,
-                        Date = new DateTimeOffset(2020, 12, 31, 0, 0, 0, TimeSpan.Zero)
-                    },
-                    new StockHistory()
-                    {
-                        Price = 91,
-                        Date = new DateTimeOffset(2021, 1, 31, 0, 0, 0, TimeSpan.Zero)
-                    },
-                    new StockHistory()
-                    {
-                        Price = 100,
-                        Date = new DateTimeOffset(2021, 2, 27, 0, 0, 0, TimeSpan.Zero)
-                    },
-                    new StockHistory()
-                    {
-                        Price = 110,
-                        Date = new DateTimeOffset(2021, 3, 31, 0, 0, 0, TimeSpan.Zero)
-                    },
-                    new StockHistory()
-                    {
-                        Price = 150,
-                        Date = new DateTimeOffset(2021, 4, 30, 0, 0, 0, TimeSpan.Zero)
-                    }
-                }
-            };
-
-            //Google
-            var google = new Stock()
-            {
-                Name = "Google",
-                Price = 104,
-                Volume = 2100,
-                StockHistories = new List<StockHistory>()
-                {
-                    new StockHistory()
-                    {
-                        Price = 70,
-                        Date = new DateTimeOffset(2020, 11, 30, 0, 0, 0, TimeSpan.Zero)
-                    },
-                    new StockHistory()
-                    {
-                        Price = 76,
-                        Date = new DateTimeOffset(2020, 12, 31, 0, 0, 0, TimeSpan.Zero)
-                    },
-                    new StockHistory()
-                    {
-                        Price = 82,
-                        Date = new DateTimeOffset(2021, 1, 31, 0, 0, 0, TimeSpan.Zero)
-                    },
-                    new StockHistory()
-                    {
-                        Price = 93,
-                        Date = new DateTimeOffset(2021, 2, 27, 0, 0, 0, TimeSpan.Zero)
-                    },
-                    new StockHistory()
-                    {
-                        Price = 100,
-                        Date = new DateTimeOffset(2021, 3, 31, 0, 0, 0, TimeSpan.Zero)
-                    },
-                    new StockHistory()
-                    {
-                        Price = 104,
-                        Date = new DateTimeOffset(2021, 4, 30, 0, 0, 0, TimeSpan.Zero)
-                    }
-                }
-            };
-
-            //RedSpace
-            var redSpace = new Stock()
-            {
-                Name = "Red Space",
-                Price = 19,
-                Volume = 560,
-                StockHistories = new List<StockHistory>()
-                {
-                    new StockHistory()
-                    {
-                        Price = 9,
-                        Date = new DateTimeOffset(2020, 11, 30, 0, 0, 0, TimeSpan.Zero)
-                    },
-                    new StockHistory()
-                    {
-                        Price = 13,
-                        Date = new DateTimeOffset(2020, 12, 31, 0, 0, 0, TimeSpan.Zero)
-                    },
-                    new StockHistory()
-                    {
-                        Price = 15,
-                        Date = new DateTimeOffset(2021, 1, 31, 0, 0, 0, TimeSpan.Zero)
-                    },
-                    new StockHistory()
-                    {
-                        Price = 18,
-                        Date = new DateTimeOffset(2021, 2, 27, 0, 0, 0, TimeSpan.Zero)
-                    },
-                    new StockHistory()
-                    {
-                        Price = 23,
-                        Date = new DateTimeOffset(2021, 3, 31, 0, 0, 0, TimeSpan.Zero)
-                    },
-
-                    new StockHistory()
-                    {
-                        Price = 19,
-                        Date = new DateTimeOffset(2021, 4, 30, 0, 0, 0, TimeSpan.Zero)
-                    }
-                }
-            };
-
-            //Yahoo
-            var yahoo = new Stock()
-            {
-                Name = "Yahoo",
-                Price = 12,
-                Volume = 300,
-                StockHistories = new List<StockHistory>()
-                {
-                    new StockHistory()
-                    {
-                        Price = 79,
-                        Date = new DateTimeOffset(2020, 11, 30, 0, 0, 0, TimeSpan.Zero)
-                    },
-                    new StockHistory()
-                    {
-                        Price = 76,
-                        Date = new DateTimeOffset(2020, 12, 31, 0, 0, 0, TimeSpan.Zero)
-                    },
-                    new StockHistory()
-                    {
-                        Price = 56,
-                        Date = new DateTimeOffset(2021, 1, 31, 0, 0, 0, TimeSpan.Zero)
-                    },
-                    new StockHistory()
-                    {
-                        Price = 38,
-                        Date = new DateTimeOffset(2021, 2, 27, 0, 0, 0, TimeSpan.Zero)
-                    },
-
-                    new StockHistory()
-                    {
-
-                        Price = 26,
-                        Date = new DateTimeOffset(2021, 3, 31, 0, 0, 0, TimeSpan.Zero)
-                    },
-
-                    new StockHistory()
-                    {
-                        Price = 12,
-                        Date = new DateTimeOffset(2021, 4, 30, 0, 0, 0, TimeSpan.Zero)
-                    }
-                }
-            };
-
-            //Alliance
-            var alliance = new Stock()
-            {
-                Name = "Alliance",
-                Price = 15,
-                Volume = 690,
-                StockHistories = new List<StockHistory>()
-                {
-                    new StockHistory()
-                    {
-                        Price = 14,
-                        Date = new DateTimeOffset(2020, 11, 30, 0, 0, 0, TimeSpan.Zero)
-                    },
-                    new StockHistory()
-                    {
-                        Price = 18,
-                        Date = new DateTimeOffset(2020, 12, 31, 0, 0, 0, TimeSpan.Zero)
-                    },
-                    new StockHistory()
-                    {
-                        Price = 20,
-                        Date = new DateTimeOffset(2021, 1, 31, 0, 0, 0, TimeSpan.Zero)
-                    },
-                    new StockHistory()
-                    {
-                        Price = 22,
-                        Date = new DateTimeOffset(2021, 2, 27, 0, 0, 0, TimeSpan.Zero)
-                    },
-
-                    new StockHistory()
-                    {
-                        Price = 18,
-                        Date = new DateTimeOffset(2021, 3, 31, 0, 0, 0, TimeSpan.Zero)
-                    },
-
-                    new StockHistory()
-                    {
-                        Price = 15,
-                        Date = new DateTimeOffset(2021, 4, 30, 0, 0, 0, TimeSpan.Zero)
-                    }
-                }
-            };
-
-            stocks.Add(microsoft);
-            stocks.Add(apple);
-            stocks.Add(alliance);
-            stocks.Add(google);
-            stocks.Add(redSpace);
-            stocks.Add(yahoo);
-
-            return stocks;
+            AddStocks(stockDbContext);
         }
 
-        public static void InitializeDatabase(IServiceProvider serviceProvider)
+        private static void AddStocks(StockDbContext stockDbContext)
         {
-            using (var serviceScope = serviceProvider.GetService<IServiceScopeFactory>().CreateScope())
+            //Stocks
+            if (!stockDbContext.Stocks.Any())
             {
-                Debug.WriteLine("Attempting seeding of Database");
-                Console.WriteLine("Attempting seeding of Database");
-
-                //Get database Settings
-                var databaseSettings = serviceScope.ServiceProvider.GetRequiredService<IOptions<DatabaseSetting>>();
-
-                //create db User
-                try
+                var microsoft = new Stock()
                 {
-                    MongoCredential adminCred = MongoCredential.CreateCredential("admin", databaseSettings.Value.AdminUser, databaseSettings.Value.AdminPassword);
-                    MongoClientSettings setting = new MongoClientSettings();
-                    setting.Credential = adminCred;
-                    setting.Server = new MongoServerAddress(databaseSettings.Value.Hostname, 27017);
-                    var user = new BsonDocument { { "createUser", databaseSettings.Value.DbUser }, { "pwd", databaseSettings.Value.DbPassword }, { "roles", new BsonArray { new BsonDocument { { "role", "readWrite" }, { "db", databaseSettings.Value.Name } } } } };
-                    new MongoClient(setting).GetDatabase(databaseSettings.Value.Name).RunCommand<BsonDocument>(user);
+                    Name = "Microsoft",
+                    Price = 89,
+                };
 
-
-                    //get database using the DbUser created above
-                    string connectionString = string.Format("mongodb://{0}:{1}@{2}:27017/{3}", databaseSettings.Value.DbUser, databaseSettings.Value.DbPassword, databaseSettings.Value.Hostname, databaseSettings.Value.Name);
-                    var mongoClient = new MongoClient(connectionString);
-
-                    var stocksDatabase = mongoClient.GetDatabase(databaseSettings.Value.Name);
-                    var stocksCollection = stocksDatabase.GetCollection<Stock>("Stock");
-
-                    //Add sample stocks
-                    foreach (var stock in GetStocks())
-                    {
-                        stocksCollection.InsertOneAsync(stock);
-                    }
-
-                    Debug.WriteLine("Database Seeding completed!");
-                    Console.WriteLine("Database Seeding completed!");
-                }
-                catch (MongoCommandException me)
+                var slimStack = new Stock()
                 {
-                    //if user already exist
-                    Debug.WriteLine(me.Message);
-                    Console.WriteLine(me.Message);
-                }
-                catch (Exception e)
-                {
-                    Debug.WriteLine(e.Message);
-                    Console.WriteLine(e.Message);
-                    throw;
-                }
+                    Name = "Slim Stack",
+                    Price = 23,
+                };
 
+                var apple = new Stock()
+                {
+                    Name = "Apple",
+                    Price = 120,
+                };
+
+                var google = new Stock()
+                {
+                    Name = "Google",
+                    Price = 104,
+                };
+
+                var redSpace = new Stock()
+                {
+                    Name = "Red Space",
+                    Price = 19,
+                };
+
+                var yahoo = new Stock()
+                {
+                    Name = "Yahoo",
+                    Price = 12,
+                };
+
+                var alliance = new Stock()
+                {
+                    Name = "Alliance",
+                    Price = 15,
+                };
+
+                Dictionary<DateTimeOffset, double> stockHistoryValues = new Dictionary<DateTimeOffset, double>();
+
+                stockDbContext.Stocks.Add(microsoft);
+                stockHistoryValues.Add(new DateTimeOffset(2020, 11, 30, 0, 0, 0, TimeSpan.Zero), 60);
+                stockHistoryValues.Add(new DateTimeOffset(2020, 12, 31, 0, 0, 0, TimeSpan.Zero), 62);
+                stockHistoryValues.Add(new DateTimeOffset(2021, 1, 31, 0, 0, 0, TimeSpan.Zero), 69);
+                stockHistoryValues.Add(new DateTimeOffset(2021, 2, 27, 0, 0, 0, TimeSpan.Zero), 72);
+                stockHistoryValues.Add(new DateTimeOffset(2021, 3, 31, 0, 0, 0, TimeSpan.Zero), 80);
+                stockHistoryValues.Add(new DateTimeOffset(2021, 4, 30, 0, 0, 0, TimeSpan.Zero), 89);
+                AddStockHistory(stockDbContext, microsoft, stockHistoryValues);
+                AddStockPosition(stockDbContext, microsoft, 200, 17800, 1);
+
+                stockDbContext.Stocks.Add(slimStack);
+                stockHistoryValues.Clear();
+                stockHistoryValues.Add(new DateTimeOffset(2020, 11, 30, 0, 0, 0, TimeSpan.Zero), 20);
+                stockHistoryValues.Add(new DateTimeOffset(2020, 12, 31, 0, 0, 0, TimeSpan.Zero), 26);
+                stockHistoryValues.Add(new DateTimeOffset(2021, 1, 31, 0, 0, 0, TimeSpan.Zero), 33);
+                stockHistoryValues.Add(new DateTimeOffset(2021, 2, 27, 0, 0, 0, TimeSpan.Zero), 29);
+                stockHistoryValues.Add(new DateTimeOffset(2021, 3, 31, 0, 0, 0, TimeSpan.Zero), 19);
+                stockHistoryValues.Add(new DateTimeOffset(2024, 4, 30, 0, 0, 0, TimeSpan.Zero), 23);
+                AddStockHistory(stockDbContext, slimStack, stockHistoryValues);
+                AddStockPosition(stockDbContext, slimStack, 10, 230, 2);
+
+                stockDbContext.Stocks.Add(apple);
+                stockHistoryValues.Clear();
+                stockHistoryValues.Add(new DateTimeOffset(2020, 11, 30, 0, 0, 0, TimeSpan.Zero), 80);
+                stockHistoryValues.Add(new DateTimeOffset(2020, 12, 31, 0, 0, 0, TimeSpan.Zero), 85);
+                stockHistoryValues.Add(new DateTimeOffset(2021, 1, 31, 0, 0, 0, TimeSpan.Zero), 91);
+                stockHistoryValues.Add(new DateTimeOffset(2021, 2, 27, 0, 0, 0, TimeSpan.Zero), 100);
+                stockHistoryValues.Add(new DateTimeOffset(2021, 3, 31, 0, 0, 0, TimeSpan.Zero), 110);
+                stockHistoryValues.Add(new DateTimeOffset(2021, 4, 30, 0, 0, 0, TimeSpan.Zero), 120);
+                AddStockHistory(stockDbContext, apple, stockHistoryValues);
+                AddStockPosition(stockDbContext, apple, 100, 12000, 3);
+
+                stockDbContext.Stocks.Add(google);
+                stockHistoryValues.Clear();
+                stockHistoryValues.Add(new DateTimeOffset(2020, 11, 30, 0, 0, 0, TimeSpan.Zero), 70);
+                stockHistoryValues.Add(new DateTimeOffset(2020, 12, 31, 0, 0, 0, TimeSpan.Zero), 76);
+                stockHistoryValues.Add(new DateTimeOffset(2021, 1, 31, 0, 0, 0, TimeSpan.Zero), 82);
+                stockHistoryValues.Add(new DateTimeOffset(2021, 2, 27, 0, 0, 0, TimeSpan.Zero), 93);
+                stockHistoryValues.Add(new DateTimeOffset(2021, 3, 31, 0, 0, 0, TimeSpan.Zero), 100);
+                stockHistoryValues.Add(new DateTimeOffset(2021, 4, 30, 0, 0, 0, TimeSpan.Zero), 104);
+                AddStockHistory(stockDbContext, google, stockHistoryValues);
+                AddStockPosition(stockDbContext, google, 200, 20000, 4);
+
+                stockDbContext.Stocks.Add(redSpace);
+                stockHistoryValues.Clear();
+                stockHistoryValues.Add(new DateTimeOffset(2020, 11, 30, 0, 0, 0, TimeSpan.Zero), 9);
+                stockHistoryValues.Add(new DateTimeOffset(2020, 12, 31, 0, 0, 0, TimeSpan.Zero), 13);
+                stockHistoryValues.Add(new DateTimeOffset(2021, 1, 31, 0, 0, 0, TimeSpan.Zero), 15);
+                stockHistoryValues.Add(new DateTimeOffset(2021, 2, 27, 0, 0, 0, TimeSpan.Zero), 18);
+                stockHistoryValues.Add(new DateTimeOffset(2021, 3, 31, 0, 0, 0, TimeSpan.Zero), 23);
+                stockHistoryValues.Add(new DateTimeOffset(2021, 4, 30, 0, 0, 0, TimeSpan.Zero), 19);
+                AddStockHistory(stockDbContext, redSpace, stockHistoryValues);
+                AddStockPosition(stockDbContext, redSpace, 40, 72, 5);
+
+                stockDbContext.Stocks.Add(yahoo);
+                stockHistoryValues.Clear();
+                stockHistoryValues.Add(new DateTimeOffset(2020, 11, 30, 0, 0, 0, TimeSpan.Zero), 79);
+                stockHistoryValues.Add(new DateTimeOffset(2020, 12, 31, 0, 0, 0, TimeSpan.Zero), 76);
+                stockHistoryValues.Add(new DateTimeOffset(2021, 1, 31, 0, 0, 0, TimeSpan.Zero), 56);
+                stockHistoryValues.Add(new DateTimeOffset(2021, 2, 27, 0, 0, 0, TimeSpan.Zero), 38);
+                stockHistoryValues.Add(new DateTimeOffset(2021, 3, 31, 0, 0, 0, TimeSpan.Zero), 26);
+                stockHistoryValues.Add(new DateTimeOffset(2021, 4, 30, 0, 0, 0, TimeSpan.Zero), 12);
+                AddStockHistory(stockDbContext, yahoo, stockHistoryValues);
+                AddStockPosition(stockDbContext, yahoo, 30, 3600, 6);
+
+                stockDbContext.Stocks.Add(alliance);
+                stockHistoryValues.Clear();
+                stockHistoryValues.Add(new DateTimeOffset(2020, 11, 30, 0, 0, 0, TimeSpan.Zero), 14);
+                stockHistoryValues.Add(new DateTimeOffset(2020, 12, 31, 0, 0, 0, TimeSpan.Zero), 18);
+                stockHistoryValues.Add(new DateTimeOffset(2021, 1, 31, 0, 0, 0, TimeSpan.Zero), 20);
+                stockHistoryValues.Add(new DateTimeOffset(2021, 2, 27, 0, 0, 0, TimeSpan.Zero), 22);
+                stockHistoryValues.Add(new DateTimeOffset(2021, 3, 31, 0, 0, 0, TimeSpan.Zero), 18);
+                stockHistoryValues.Add(new DateTimeOffset(2021, 4, 30, 0, 0, 0, TimeSpan.Zero), 15);
+                AddStockHistory(stockDbContext, alliance, stockHistoryValues);
+                AddStockPosition(stockDbContext, alliance, 500, 10000, 7);
+
+                stockDbContext.SaveChanges();
             }
+
+        }
+
+        private static void AddStockHistory(StockDbContext stockDbContext, Stock stock, Dictionary<DateTimeOffset, double> stockHistoryValues)
+        {
+            foreach (var stockHistoryValue in stockHistoryValues)
+            {
+                StockHistory stockHistory = new StockHistory()
+                {
+                    StockId = stock.Id,
+                    Price = stockHistoryValue.Value,
+                    Date = stockHistoryValue.Key
+                };
+
+                stockDbContext.StockHistories.Add(stockHistory);
+            }
+            stockDbContext.SaveChanges();
+        }
+
+        private static void AddStockPosition(StockDbContext stockDbContext, Stock stock, int shares, double costBasis, int stockPositionId)
+        {
+            StockPosition stockPosition = new StockPosition()
+            {
+                Id = stockPositionId,
+                StockId = stock.Id,
+                Shares = shares,
+                CostBasis = costBasis,
+
+            };
+
+            stockDbContext.StockPositions.Add(stockPosition);
+            stockDbContext.SaveChanges();
         }
     }
 }

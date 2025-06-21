@@ -1,52 +1,55 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using MongoDB.Driver;
-using StockMicroservices.API.Models;
+﻿using Microsoft.EntityFrameworkCore;
 using StockMicroservices.API.Models.Daos;
 
 namespace StockMicroservices.API.Data
 {
-    public class StockDbContext : IStockDbContext
+    public class StockDbContext : DbContext
     {
         #region Properties
-        private readonly IMongoCollection<Stock> _stocksCollection;
+        public DbSet<Stock> Stocks { get; set; }
+        public DbSet<StockHistory> StockHistories { get; set; }
+        public DbSet<StockOrder> StockOrders { get; set; }
+        public DbSet<StockPosition> StockPositions { get; set; }
         #endregion
 
         #region Constructor
-        public StockDbContext(IOptions<DatabaseSetting> databaseSettings)
+        public StockDbContext(DbContextOptions options) : base(options)
         {
-            string connectionString = string.Format("mongodb://{0}:{1}@{2}:27017/{3}", databaseSettings.Value.DbUser, databaseSettings.Value.DbPassword, databaseSettings.Value.Hostname, databaseSettings.Value.Name);
 
-            var mongoClient = new MongoClient(connectionString);
-
-            var stockDatabase = mongoClient.GetDatabase(databaseSettings.Value.Name);
-
-            this._stocksCollection = stockDatabase.GetCollection<Stock>("Stock");
         }
         #endregion
 
-        #region Methods (CRUD)
-        public async Task<List<Stock>> GetStocksAsync() =>
-            await _stocksCollection.Find(_ => true).ToListAsync();
+        #region Methods
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Stock>()
+                        .ToTable("Stock");
 
-        public async Task<Stock?> GetStockByIdAsync(string id) =>
-            await _stocksCollection.Find(x => x.Id == id).FirstOrDefaultAsync();
+            modelBuilder.Entity<StockHistory>()
+                        .ToTable("StockHistory");
 
-        public async Task<Stock?> GetStockByNameAsync(string name) =>
-            await _stocksCollection.Find(x => x.Name == name).FirstOrDefaultAsync();
+            modelBuilder.Entity<StockHistory>()
+                        .HasOne(s => s.Stock)
+                        .WithMany(s => s.StockHistories)
+                        .HasForeignKey(s => s.StockId);
 
-        public async Task CreateStockAsync(Stock stock) =>
-            await _stocksCollection.InsertOneAsync(stock);
+            modelBuilder.Entity<StockOrder>()
+                        .ToTable("StockOrder");
 
-        public async Task UpdateStockAsync(string id, Stock stock) =>
-            await _stocksCollection.ReplaceOneAsync(x => x.Id == id, stock);
+            modelBuilder.Entity<StockOrder>()
+                        .HasOne(s => s.Stock)
+                        .WithMany()
+                        .HasForeignKey(s => s.StockId);
 
-        public async Task RemoveStockAsync(string id) =>
-            await _stocksCollection.DeleteOneAsync(x => x.Id == id);
+            modelBuilder.Entity<StockPosition>()
+                        .ToTable("StockPosition");
+
+            modelBuilder.Entity<StockPosition>()
+                        .HasOne(s => s.Stock)
+                        .WithMany()
+                        .HasForeignKey(s => s.StockId);
+
+        }
 
         #endregion
     }

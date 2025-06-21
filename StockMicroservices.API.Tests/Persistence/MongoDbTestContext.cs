@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace StockMicroservices.API.Tests.Persistence
 {
-    public class MongoDbTestContext : IStockDbContext
+    public class MongoDbTestContext 
     {
         public MongoClient Client { get; }
 
@@ -47,7 +47,7 @@ namespace StockMicroservices.API.Tests.Persistence
             await StockCollection.Find(_ => true).ToListAsync();
 
         public async Task<DAO.Stock?> GetStockByIdAsync(string id) =>
-            await StockCollection.Find(x => x.Id == id).FirstOrDefaultAsync();
+            await StockCollection.Find(x => x.Name == id).FirstOrDefaultAsync();
 
         public async Task<DAO.Stock?> GetStockByNameAsync(string name) =>
             await StockCollection.Find(x => x.Name == name).FirstOrDefaultAsync();
@@ -56,10 +56,10 @@ namespace StockMicroservices.API.Tests.Persistence
             await StockCollection.InsertOneAsync(stock);
 
         public async Task UpdateStockAsync(string id, DAO.Stock stock) =>
-            await StockCollection.ReplaceOneAsync(x => x.Id == id, stock);
+            await StockCollection.ReplaceOneAsync(x => x.Name == id, stock);
 
         public async Task RemoveStockAsync(string id) =>
-            await StockCollection.DeleteOneAsync(x => x.Id == id);
+            await StockCollection.DeleteOneAsync(x => x.Name == id);
 
         #endregion
 

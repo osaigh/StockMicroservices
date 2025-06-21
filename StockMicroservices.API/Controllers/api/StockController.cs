@@ -13,7 +13,7 @@ using DTOStock = StockMicroservices.API.Models.Dtos.Stock;
 
 namespace StockMicroservices.API.Controllers.api
 {
-    //[Authorize("StockAPIPolicy")]
+    [Authorize("StockAPIPolicy")]
     [Route("api/[controller]")]
     [ApiController]
     public class StockController : ControllerBase
@@ -46,21 +46,16 @@ namespace StockMicroservices.API.Controllers.api
             return Ok(dtoStocks);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{stockId}")]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(DTOStock), (int)(HttpStatusCode.OK))]
-        public async Task<ActionResult<DTOStock>> Get(string id)
+        public async Task<ActionResult<DTOStock>> Get(int stockId)
         {
-            if (string.IsNullOrEmpty(id))
-            {
-                return new BadRequestObjectResult("id is null");
-            }
-
-            var daoStock = await _StockRepository.GetAsync(id);
+            var daoStock = await _StockRepository.GetAsync(stockId);
 
             if (daoStock == null)
             {
-                return new BadRequestObjectResult(string.Format("No Stock with id {0}",id));
+                return null;
             }
 
             var dtoStock = _Mapper.Map<DTOStock>(daoStock);

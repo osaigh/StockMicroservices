@@ -39,6 +39,8 @@ services:
       - RabbitMq:Hostname=rabbitmq
       - RabbitMq:Username=user
       - RabbitMq:Password=password
+    ports:
+      - 44444:44444
 
   stockmicroservices.api:
     container_name: stockapi
@@ -47,6 +49,7 @@ services:
       - rabbitmq
       - stockmicroservices.identityserver
     environment:
+      - ASPNETCORE_URLS=http://+:80
       - ASPNETCORE_ENVIRONMENT=Development
       - APIScope=StockMicroservicesAPI
       - IdentityServerUrl=http://stockidentityserver
@@ -67,6 +70,7 @@ services:
   stockmicroservices.apigateway:
     container_name: stockapigateway
     environment:
+      - ASPNETCORE_URLS=http://+:80
       - ASPNETCORE_ENVIRONMENT=Development
       - IdentityServerUrl=http://stockidentityserver
       - APIScope=StockMicroservicesAPI
@@ -88,10 +92,49 @@ services:
     container_name: stockwebclient
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - AUTHORITY=http://localhost:44401/
+      - REDIRECT_URI=http://localhost:44100/signincallback
+      - POST_LOGOUT_REDIRECT_URI=http://localhost:44100/signoutcallback
+      - ISSUER=http://localhost:44401
+      - JWKS_URI=http://localhost:44401/.well-known/openid-configuration/jwks
+      - AUTHORIZATION_ENDPOINT=http://localhost:44401/connect/authorize
+      - TOKEN_ENDPOINT=http://localhost:44401/connect/token
+      - USERINFO_ENDPOINT=http://localhost:44401/connect/userinfo
+      - END_SESSION_ENDPOINT=http://localhost:44401/connect/endsession
+      - CHECK_SESSION_IFRAME=http://localhost:44401/connect/checksession
+      - REVOCATION_ENDPOINT=http://localhost:44401/connect/revocation
+      - INTROSPECTION_ENDPOINT=http://localhost:44401/connect/introspect
+      - DEVICE_AUTHORIZATION_ENDPOINT=http://localhost:44401/connect/deviceauthorization
+      - STOCK_API=http://localhost:44405/
     depends_on:
       - stockmicroservices.api
       - stockmicroservices.identityserver
     ports:
       - "44100:80"
-   
 
+  stockmicroservices.stockwebstatusapi:
+    ports:
+      - "44610:5000"
+    depends_on:
+      - stockmicroservices.api
+      - stockmicroservices.apigateway
+      - stockmicroservices.identityserver
+      - stockmicroservices.stockmarketupdater
+      - stockmicroservices.webclient
+    environment:
+      SERVICE_LIST: >
+        [
+          {"name": "StockAPI", "url": "http://stockapi/hc"},
+          {"name": "StockIdentityServer", "url": "http://stockidentityserver/hc"},
+          {"name": "StockWebClient", "url": "http://stockwebclient/hc"},
+          {"name": "StockMarketUpdater", "url": "http://stockmarketupdater:44444"},
+          {"name": "StockApiGateway", "url": "http://stockapigateway/hc"}
+        ]
+
+  stockmicroservices.stockwebstatus:
+    ports:
+      - "44080:80"
+    depends_on:
+      - stockmicroservices.stockwebstatusapi
+    environment:
+      - WEBSTATUSAPI=http://localhost:44610/api/health-status

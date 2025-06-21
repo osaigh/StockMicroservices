@@ -2,6 +2,7 @@
 
 FROM mcr.microsoft.com/dotnet/runtime:6.0 AS base
 WORKDIR /app
+EXPOSE 44444
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src

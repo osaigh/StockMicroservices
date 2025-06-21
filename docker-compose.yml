@@ -43,5 +43,17 @@ services:
       context: .
       dockerfile: StockMicroservices.WebClient/ClientApp/Dockerfile
 
+  stockmicroservices.stockwebstatusapi:
+    image: ${DOCKER_REGISTRY-}stockwebstatusapi
+    build:
+      context: .
+      dockerfile: stockwebstatusapi/Dockerfile
+
+  stockmicroservices.stockwebstatus:
+    image: ${DOCKER_REGISTRY-}stockwebstatus
+    build:
+      context: .
+      dockerfile: stockwebstatus/Dockerfile
+
     
   

@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
 using Moq;
@@ -53,8 +51,8 @@ namespace StockMicroservices.API.Tests.UnitTests
         }
 
         [Theory]
-        [InlineData("e656bb6f9a358bcc3ae63c61")]
-        public async Task Get_ValidStockId_ReturnsStock(string stockId)
+        [InlineData(1)]
+        public async Task Get_ValidStockId_ReturnsStock(int stockId)
         {
             //Arrange
 
@@ -65,7 +63,7 @@ namespace StockMicroservices.API.Tests.UnitTests
             var mockRepo = new Mock<IRepository<DAOs.Stock>>();
             mockRepo.Setup(repo => repo.GetAsync(It.IsAny<object>())).ReturnsAsync((object id) =>
             {
-                var _id = id.ToString();
+                var _id = int.Parse(id.ToString());
                 return Utilities.GetTestStocks()
                                 .FirstOrDefault(s => s.Id == _id);
             });
@@ -81,8 +79,8 @@ namespace StockMicroservices.API.Tests.UnitTests
         }
 
         [Theory]
-        [InlineData("e656bb6f9a358bcc3ae63c68")]
-        public async Task Get_InvalidStockId_ReturnsNull(string stockId)
+        [InlineData(1)]
+        public async Task Get_InvalidStockId_ReturnsNull(int stockId)
         {
             //Arrange
 
@@ -93,7 +91,7 @@ namespace StockMicroservices.API.Tests.UnitTests
             var mockRepo = new Mock<IRepository<DAOs.Stock>>();
             mockRepo.Setup(repo => repo.GetAsync(It.IsAny<object>())).ReturnsAsync((object id) =>
             {
-                var _id = id.ToString();
+                var _id = int.Parse(id.ToString());
                 return Utilities.GetTestStocks()
                                 .FirstOrDefault(s => s.Id == _id);
             });

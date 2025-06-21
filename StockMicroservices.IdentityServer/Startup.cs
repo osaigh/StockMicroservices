@@ -4,15 +4,18 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
+using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using StockMicroservices.IdentityServer.Data;
@@ -81,8 +84,9 @@ namespace StockMicroservices.IdentityServer
                     //.AddDeveloperSigningCredential();
 
             services.ConfigureCorsPolicy(new List<string>() { "http://localhost:44300", "http://localhost:44100", "http://localhost:44200", "http://localhost:44405" }, Configuration);
+            services.AddHealthChecks()
+               .AddCheck("self", () => HealthCheckResult.Healthy());
 
-            
         }
 
         
@@ -122,11 +126,19 @@ namespace StockMicroservices.IdentityServer
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
-
             app.UseEndpoints(endpoints =>
-                             {
-                                 endpoints.MapDefaultControllerRoute();
-                             });
+            {
+                endpoints.MapDefaultControllerRoute();
+                endpoints.MapHealthChecks("/hc", new HealthCheckOptions()
+                {
+                    Predicate = _ => true,
+                    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+                });
+                endpoints.MapHealthChecks("/liveness", new HealthCheckOptions
+                {
+                    Predicate = r => r.Name.Contains("self")
+                });
+            });
         }
     }
 }

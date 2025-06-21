@@ -10,25 +10,25 @@ namespace StockMicroservices.API.Tests
     public static class Utilities
     {
         #region Code
-        public static void InitializeDbForTests(IStockDbContext db)
+        public static void InitializeDbForTests(StockDbContext db)
         {
             //Stocks
             List<Stock> stocks = new List<Stock>();
             var stock1 = new Stock()
             {
-                Id = (new ObjectId("e656bb6f9a358bcc3ae63c61")).ToString(),
+                Id = 1,
                 Name = "Microsoft",
                 Price = 85.0,
-                Volume = 1000,
+                
                 StockHistories = new List<StockHistory>()
             };
 
             var stock2 = new Stock()
             {
-                Id = (new ObjectId("057340ee83ddedcbeef5b1ab")).ToString(),
+                Id = 2,
                 Name = "Google",
                 Price = 135.0,
-                Volume = 1300,
+                
                 StockHistories = new List<StockHistory>()
             };
             stocks.Add(stock1);
@@ -77,8 +77,8 @@ namespace StockMicroservices.API.Tests
             };
             stock2.StockHistories.Add(stockHistory5);
 
-            db.CreateStockAsync(stock1);
-            db.CreateStockAsync(stock2);
+           // db.CreateStockAsync(stock1);
+            //db.CreateStockAsync(stock2);
 
         }
 
@@ -87,16 +87,16 @@ namespace StockMicroservices.API.Tests
             List<Stock> stocks = new List<Stock>();
             stocks.Add(new Stock()
             {
-                Id = (new ObjectId("e656bb6f9a358bcc3ae63c61")).ToString(),
+                Id = 1,
                 Name = "Microsoft",
-                Volume = 1000,
+            
                 Price = 85
             });
             stocks.Add(new Stock()
             {
-                Id = (new ObjectId("057340ee83ddedcbeef5b1ab")).ToString(),
+                Id = 1,
                 Name = "Google",
-                Volume = 1300,
+                
                 Price = 105
             });
 
@@ -109,19 +109,19 @@ namespace StockMicroservices.API.Tests
             List<StockHistory> stockHistories = new List<StockHistory>();
             stockHistories.Add(new StockHistory()
             {
-                StockId = "e656bb6f9a358bcc3ae63c61",
+                StockId = 1,
                 Date = new DateTimeOffset(new DateTime(2018, 12, 02)),
                 Price = 45
             });
             stockHistories.Add(new StockHistory()
             {
-                StockId = "e656bb6f9a358bcc3ae63c61",
+                StockId = 1,
                 Date = new DateTimeOffset(new DateTime(2019, 12, 02)),
                 Price = 25
             });
             stockHistories.Add(new StockHistory()
             {
-                StockId = "e656bb6f9a358bcc3ae63c61",
+                StockId = 1,
                 Date = new DateTimeOffset(new DateTime(2020, 12, 02)),
                 Price = 37
             });

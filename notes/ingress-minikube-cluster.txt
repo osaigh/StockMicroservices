@@ -1,0 +1,16 @@
+1. Install minikube
+2. install helm, download the appropriate package for the os
+3. Disable the default ingress controller - minikube addons disable ingress
+4. run the following to install ingress-nginx
+	helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+	helm repo update
+	helm install ingress-nginx ingress-nginx/ingress-nginx
+
+5. If you get the error 'Error: INSTALLATION FAILED: Unable to continue with install: IngressClass "nginx" in namespace "', do the following
+	a. Get the ingress class -kubectl get ingressclass --all-namespaces
+	b. Delete the class kubectl delete ingressclass nginx --all-namespaces
+	
+6. Then run helm install helm install my-nginx-ingress ingress-nginx/ingress-nginx --namespace ingress-nginx --set controller.ingressClassResource.name=nginx --set controller.ingressClassResource.enabled=true
+7. run kubectl get pods -n ingress-nginx to verify the pod for ingress controller is running
+8. Now run minikube tunnel 
+9. Then apply your definition with the ingress kubectl apply -f .\nginx.yaml 

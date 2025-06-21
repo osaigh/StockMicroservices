@@ -1,19 +1,14 @@
-﻿using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace StockMicroservices.API.Models.Daos
 {
     public class Stock
     {
-        [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string Id { get; set; }
-        public string Name { get; set; }
+        [Key]
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
         public double Price { get; set; }
-        public List<StockHistory> StockHistories { get; set; }
+        public ICollection<StockHistory> StockHistories { get; set; }
     }
 }

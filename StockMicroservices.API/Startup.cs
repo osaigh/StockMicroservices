@@ -1,11 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Net;
-using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 using AutoMapper;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
@@ -13,13 +9,9 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
 using StockMicroservices.API.Data;
@@ -30,6 +22,11 @@ using StockMicroservices.API.Models.Daos;
 using StockMicroservices.API.Repository;
 using StockMicroservices.API.Services;
 using StockMicroservices.EventBus.Common;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using HealthChecks.UI.Client;
+using MassTransit.AspNetCoreIntegration;
 
 namespace StockMicroservices.API
 {
@@ -47,12 +44,19 @@ namespace StockMicroservices.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services.AddControllers().AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); // Enum as strings
+                options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase; // CamelCase naming
+                options.JsonSerializerOptions.WriteIndented = true; // Indented JSON (optional)
+            });
 
             string identityServerUrl = _Configuration.GetValue(typeof(string), "IdentityServerUrl").ToString();
             string apiScope = _Configuration.GetValue(typeof(string), "APIScope").ToString();
 
-            services.AddSingleton<IStockDbContext, StockDbContext>();
+            //Database
+            string connectionString = _Configuration.GetConnectionString("DefaultConnection");
+            services.AddDbContext<StockDbContext>(options => options.UseInMemoryDatabase("InMemoryDbFor"));
 
             //To run Stock.API.Test comeent out lines 47 - 64 and comment out the Authorization headers on the controllers
             services.AddAuthentication(options => options.DefaultScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme)
@@ -129,23 +133,30 @@ namespace StockMicroservices.API
                         });
                     }));
                 });
-                services.AddMassTransitHostedService();
+                //services.AddMassTransitHostedService();
+                services.AddSingleton<IHostedService, MassTransitHostedService>();
             }
 
             //StockMarketService
             services.AddScoped<IStockMarketService, StockMarketService>();
 
             //Repositories
+            services.AddScoped<IRepository<StockOrder>, StockOrderRepository>();
+            services.AddScoped<IRepository<StockPosition>, StockPositionRepository>();
             services.AddScoped<IRepository<Stock>, StockRepository>();
+            services.AddScoped<IRepository<StockHistory>, StockHistoryRepository>();
             services.Configure<DatabaseSetting>(_Configuration.GetSection("Database"));
+
+            services.AddHealthChecks()
+               .AddCheck("self", () => HealthCheckResult.Healthy());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IStockDbContext stockDbContext)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, StockDbContext stockDbContext)
         {
             if (env.IsEnvironment("local") || env.IsEnvironment("development"))
             {
-                SeedData.InitializeDatabase(app.ApplicationServices);
+                SeedData.InitializeDB(stockDbContext);
             }
 
 
@@ -199,6 +210,19 @@ namespace StockMicroservices.API
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+            });
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapHealthChecks("/hc", new HealthCheckOptions()
+                {
+                    Predicate = _ => true,
+                    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+                });
+                endpoints.MapHealthChecks("/liveness", new HealthCheckOptions
+                {
+                    Predicate = r => r.Name.Contains("self")
+                });
             });
         }
     }
