@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stockwebclient
+spec:
+  selector:
+    matchLabels:
+      app: stockwebclient
+  template:
+    metadata:
+      labels:
+        app: stockwebclient
+    spec:
+      containers:
+      - name: stockwebclient
+        image: {{ .Values.stockwebclient.image }}
+        env:
+          - name: ASPNETCORE_ENVIRONMENT
+            valueFrom:
+              configMapKeyRef:
+                name: stock-config
+                key: stockwebclient_env
+          - name: AUTHORITY
+            value: {{ .Values.stockwebclient.identity.authority }}
+          - name: CLIENT_ID
+            value: {{ .Values.stockwebclient.identity.client_id }}
+          - name: REDIRECT_URI
+            value: {{ .Values.stockwebclient.identity.redirect_uri }}
+          - name: POST_LOGOUT_REDIRECT_URI
+            value: {{ .Values.stockwebclient.identity.post_logout_redirect_uri }}
+          - name: ISSUER
+            value: {{ .Values.stockwebclient.identity.issuer }}
+          - name: JWKS_URI
+            value: {{ .Values.stockwebclient.identity.jwks_uri }}
+          - name: AUTHORIZATION_ENDPOINT
+            value: {{ .Values.stockwebclient.identity.authorization_endpoint }}
+          - name: TOKEN_ENDPOINT
+            value: {{ .Values.stockwebclient.identity.token_endpoint }} 
+          - name: USERINFO_ENDPOINT
+            value: {{ .Values.stockwebclient.identity.userinfo_endpoint }}
+          - name: END_SESSION_ENDPOINT
+            value: {{ .Values.stockwebclient.identity.end_session_endpoint }}
+          - name: CHECK_SESSION_IFRAME
+            value: {{ .Values.stockwebclient.identity.check_session_iframe }}
+          - name: REVOCATION_ENDPOINT
+            value: {{ .Values.stockwebclient.identity.revocation_endpoint }}
+          - name: INTROSPECTION_ENDPOINT
+            value: {{ .Values.stockwebclient.identity.introspection_endpoint }}
+          - name: DEVICE_AUTHORIZATION_ENDPOINT
+            value: {{ .Values.stockwebclient.identity.device_authorization_endpoint }}
+          - name: STOCK_API
+            value: {{ .Values.stockwebclient.stockapi }}
+        ports:
+        - containerPort: {{ .Values.stockwebclient.targetPort | default 80 }}
+        resources:
+          requests:
+            cpu: {{ .Values.stockwebclient.resources.requests.cpu }}
+            memory: {{ .Values.stockwebclient.resources.requests.memory }}
+          limits:
+            cpu: {{ .Values.stockwebclient.resources.limits.cpu }}
+            memory: {{ .Values.stockwebclient.resources.limits.memory }}

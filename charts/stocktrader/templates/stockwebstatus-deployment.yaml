@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stockwebstatus
+spec:
+  selector:
+    matchLabels:
+      app: stockwebstatus
+  template:
+    metadata:
+      labels:
+        app: stockwebstatus
+    spec:
+      containers:
+      - name: stockwebstatus
+        image: {{ .Values.stockwebstatus.image }}
+        env:
+          - name: WEBSTATUSAPI
+            value: {{ .Values.stockwebstatus.webStatusApiUrl }}
+        ports:
+        - containerPort: {{ .Values.stockwebstatus.targetPort | default 80 }}

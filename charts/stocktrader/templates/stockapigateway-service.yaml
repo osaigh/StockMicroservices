@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service   
+metadata:
+  name: stockapigateway
+spec:
+  selector:
+    app: stockapigateway
+  ports:
+    - name: http
+      protocol: TCP
+      port: {{ .Values.stockapigateway.servicePort }}
+      targetPort: {{ .Values.stockapigateway.targetPort | default 80 }}
+  type: NodePort

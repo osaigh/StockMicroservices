@@ -1,6 +1,11 @@
 version: '3.4'
 
 services:
+  envoy:
+    image: ${DOCKER_REGISTRY-}envoy
+    build:
+      context: .
+      dockerfile: Envoy/Dockerfile
   rabbitmq:
     image: rabbitmq:3-management-alpine  
 

@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stockapigateway
+spec:   
+  selector:
+    matchLabels:
+      app: stockapigateway
+  template:
+    metadata:
+      labels:
+        app: stockapigateway
+    spec:
+      containers:
+      - name: stockapigateway
+        image: {{ .Values.stockapigateway.image }}
+        ports:
+        - containerPort: {{ .Values.stockapigateway.targetPort | default 80 }}

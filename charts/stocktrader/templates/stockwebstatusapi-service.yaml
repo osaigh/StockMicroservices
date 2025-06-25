@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service   
+metadata:
+  name: stockwebstatusapi
+spec:   
+  selector:
+    app: stockwebstatusapi
+  ports:
+    - protocol: TCP
+      port: {{ .Values.stockwebstatusapi.servicePort | default 44610 }}
+      targetPort: {{ .Values.stockwebstatusapi.targetPort | default 5000 }}
+  type: NodePort

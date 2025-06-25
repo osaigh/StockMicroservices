@@ -1,0 +1,32 @@
+apiVersion: v2
+name: stocktrader
+description: A sample stock trader application using microservices architecture.
+# This chart deploys a stock trader application with multiple microservices, including an API,
+# an API gateway, identity server, web client, and various backend services.
+# The application is designed to demonstrate the use of RabbitMQ for messaging, MongoDB for
+# data storage, and Docker for containerization.
+# The chart includes configurations for RabbitMQ, MongoDB, and various environment variables
+# required for the microservices to function correctly.
+# The application is built using .NET Core and is intended for educational purposes to showcase
+# microservices architecture, containerization, and deployment using Helm.
+# The chart is structured to allow easy deployment and management of the stock trader application
+# using Helm, a package manager for Kubernetes.
+# The chart includes all necessary configurations, dependencies, and templates to deploy the
+# application on a Kubernetes cluster.
+# The chart is designed to be used in a development environment and can be customized for production
+# use by modifying the values in the values.yaml file.
+# The chart is expected to be used with Kubernetes and Helm, and it provides a complete solution
+# for deploying a stock trader application with microservices architecture.
+
+type: application
+
+# This is the chart version. This version number should be incremented each time you make changes
+# to the chart and its templates, including the app version.
+# Versions are expected to follow Semantic Versioning (https://semver.org/)
+version: 0.1.0
+
+# This is the version number of the application being deployed. This version number should be
+# incremented each time you make changes to the application. Versions are not expected to
+# follow Semantic Versioning. They should reflect the version the application is using.
+# It is recommended to use it with quotes.
+appVersion: "1.16.0"

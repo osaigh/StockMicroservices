@@ -6,6 +6,7 @@ export default class UserAuthenticationService {
   currentuser: User | null;
 
   constructor() {
+    IdentityConfig.client_id = window._env_.CLIENT_ID;
     IdentityConfig.authority = window._env_.AUTHORITY;
     IdentityConfig.redirect_uri = window._env_.REDIRECT_URI;
     IdentityConfig.post_logout_redirect_uri = window._env_.POST_LOGOUT_REDIRECT_URI;

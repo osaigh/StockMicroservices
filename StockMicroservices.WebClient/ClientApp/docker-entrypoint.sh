@@ -5,6 +5,7 @@ echo "Generating config.json..."
 cat <<EOF > /usr/share/nginx/html/config.json
 {
   "AUTHORITY": "${AUTHORITY}",
+  "CLIENT_ID": "${CLIENT_ID}",
   "REDIRECT_URI": "${REDIRECT_URI}",
   "POST_LOGOUT_REDIRECT_URI": "${POST_LOGOUT_REDIRECT_URI}",
   "ISSUER": "${ISSUER}",

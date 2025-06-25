@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stockwebstatusapi
+spec:   
+  selector:
+    matchLabels:
+      app: stockwebstatusapi
+  template:
+    metadata:
+      labels:
+        app: stockwebstatusapi
+    spec:
+      containers:
+      - name: stockwebstatusapi
+        image: {{ .Values.stockwebstatusapi.image }}
+        env:
+          - name: SERVICE_LIST
+            value: >
+              [
+                {
+                  "name": "StockAPI",
+                  "url": "http://stockapi:44300/hc"
+                },
+                {
+                  "name": "Stock API Gateway",
+                  "url": "http://stockapigateway:44405/hc"
+                },
+                {
+                  "name": "Identity Server",
+                  "url": "http://stockidentityserver:44401/hc"
+                },
+                {
+                  "name": "Stock Market Updater",
+                  "url": "http://stockmarketupdater:44444/hc"
+                },
+                {
+                  "name": "Web Client",
+                  "url": "http://stockwebclient:44100/hc"
+                }
+              ]
+        ports:
+        - containerPort: {{ .Values.stockwebstatusapi.targetPort | default 5000 }}

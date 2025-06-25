@@ -49,6 +49,20 @@ namespace StockMicroservices.IdentityServer
                                          },
                                          new Client()
                                          {
+                                             ClientId = "client_id_react3",
+                                             RedirectUris = { "http://stockwebclient/SignInCallback" },
+                                             PostLogoutRedirectUris = { "http://stockwebclient/SignOutCallback" },
+                                             AllowedGrantTypes = GrantTypes.Implicit,
+                                             AllowedScopes = {IdentityServerConstants.StandardScopes.OpenId, IdentityServerConstants.StandardScopes.Profile, IdentityServerConstants.StandardScopes.Email, "StockMicroservicesAPI"},
+                                             AllowAccessTokensViaBrowser = true,
+                                             AllowOfflineAccess = true,
+                                             RequireClientSecret = false,
+                                             RequireConsent = false,
+                                             AllowedCorsOrigins = { "http://stockwebclient" },
+                                             AccessTokenLifetime = 86400,
+                                         },
+                                         new Client()
+                                         {
                                              ClientId = "client_id_react2",
                                              RedirectUris = { "http://localhost:3000/SignInCallback" },
                                              PostLogoutRedirectUris = { "http://localhost:3000/SignOutCallback" },

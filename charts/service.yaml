@@ -1,0 +1,117 @@
+apiVersion: v1
+kind: Service   
+metadata:
+  name: rabbitmq
+spec:
+  selector:
+    app: rabbitmq
+  ports:
+  - name: user
+    protocol: TCP
+    port: {{ .Values.rabbitmq.port1 | default 5672 }}
+    targetPort: {{ .Values.rabbitmq.port1 | default 5672 }}
+  - name: admin
+    protocol: TCP
+    port: {{ .Values.rabbitmq.port1 | default 15672 }}
+    targetPort: {{ .Values.rabbitmq.port1 | default 15672 }}
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service   
+metadata:
+  name: stockapi
+spec:
+  selector:
+    app: stockapi
+  ports:
+    - name: http
+      protocol: TCP
+      port: {{ .Values.stockapi.servicePort }}
+      targetPort: {{ .Values.stockapi.targetPort }}
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service   
+metadata:
+  name: stockapigateway
+spec:
+  selector:
+    app: stockapigateway
+  ports:
+    - name: http
+      protocol: TCP
+      port: {{ .Values.stockapigateway.servicePort }}
+      targetPort: {{ .Values.stockapigateway.targetPort | default 80 }}
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stockidentityserver
+spec:
+  selector:
+    app: stockidentityserver
+  ports:
+    - name: http
+      protocol: TCP
+      port: {{ .Values.stockidentityserver.servicePort }}
+      targetPort: {{ .Values.stockidentityserver.targetPort | default 80 }}
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service   
+metadata:
+  name: stockmarketupdater
+spec:
+  selector:
+    app: stockmarketupdater
+  ports:
+  - name: default
+    protocol: TCP
+    port: {{ .Values.stockmarketupdater.port | default 44444 }}
+    targetPort: {{ .Values.stockmarketupdater.port | default 44444 }}
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service   
+metadata:
+  name: stockwebclient
+spec:
+  selector:
+    app: stockwebclient
+  ports:
+    - name: http
+      protocol: TCP
+      port: {{ .Values.stockwebclient.servicePort | default 44610 }}
+      targetPort: {{ .Values.stockwebclient.targetPort | default 5000 }}
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service   
+metadata:
+  name: stockwebstatus
+spec:
+  selector:
+    app: stockwebstatus
+  ports:
+    - name: http
+      protocol: TCP
+      port: {{ .Values.stockwebstatus.servicePort | default 44080 }}
+      targetPort: {{ .Values.stockwebstatus.targetPort | default 80 }}
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service   
+metadata:
+  name: stockwebstatusapi
+spec:   
+  selector:
+    app: stockwebstatusapi
+  ports:
+    - protocol: TCP
+      port: {{ .Values.stockwebstatusapi.servicePort | default 44080 }}
+      targetPort: {{ .Values.stockwebstatusapi.targetPort | default 5000 }}
+  type: ClusterIP

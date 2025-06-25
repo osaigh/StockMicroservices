@@ -1,6 +1,12 @@
 version: '3.4'
 
 services:
+  envoy:
+    container_name: envoy
+    restart: always
+    hostname: envoy
+    ports:
+      - "45555:80"
   rabbitmq:
     container_name: rabbitmq
     hostname: rabbitmq
@@ -27,7 +33,6 @@ services:
   stockmicroservices.api:
     container_name: stockapi
     depends_on:
-      - mongo
       - rabbitmq
       - stockmicroservices.identityserver
     environment:
@@ -39,13 +44,6 @@ services:
       - RabbitMq:Hostname=rabbitmq
       - RabbitMq:Username=user
       - RabbitMq:Password=password
-      - Database:ConnectionString=mongodb://root:password@mongo:27017
-      - Database:Hostname=mongo
-      - Database:Name=stocks
-      - Database:AdminUser=root
-      - Database:AdminPassword=admin1
-      - Database:DbUser=steam
-      - Database:DbPassword=steam1
     ports:
       - "44300:80"
 
@@ -74,6 +72,7 @@ services:
     container_name: stockwebclient
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - CLIENT_ID=client_id_react
       - AUTHORITY=http://localhost:44401/
       - REDIRECT_URI=http://localhost:44100/signincallback
       - POST_LOGOUT_REDIRECT_URI=http://localhost:44100/signoutcallback

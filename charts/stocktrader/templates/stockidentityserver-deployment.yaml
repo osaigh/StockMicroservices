@@ -13,8 +13,7 @@ spec:
     spec:
       containers:
       - name: stockidentityserver
-        image: osahile/stockidentityserver
-        imagePullPolicy: Always
+        image: {{ .Values.stockidentityserver.image }}
         env:
           - name: ASPNETCORE_ENVIRONMENT
             valueFrom:
@@ -24,4 +23,4 @@ spec:
           - name: ASPNETCORE_URLS
             value: http://+
         ports:
-        - containerPort: 80
+        - containerPort: {{ .Values.stockidentityserver.targetPort | default 80 }}

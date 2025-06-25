@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stockapi
+spec:
+  selector:
+    matchLabels:
+      app: stockapi
+  template:
+    metadata:
+      labels:
+        app: stockapi
+    spec:
+      containers:
+      - name: stockapi
+        image: {{ .Values.stockapi.image }}
+        env:
+          - name: ASPNETCORE_URLS
+            value: {{ .Values.stockapi.urls }}
+          - name: IdentityServerUrl
+            valueFrom:
+              configMapKeyRef:
+                name: stock-config
+                key: identityserverurl
+          - name: APIScope
+            valueFrom:
+              configMapKeyRef:
+                name: stock-config
+                key: stockapi_apiscope
+          - name: ASPNETCORE_ENVIRONMENT
+            valueFrom:
+              configMapKeyRef:
+                name: stock-config
+                key: stockapi_env
+          - name: RabbitMq__RetryCount
+            value: {{ .Values.stockapi.rabbitMq.retryCount | quote | default "5" }}
+          - name: RabbitMq__Hostname
+            value: rabbitmq
+          - name: RabbitMq__Username
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.rabbitmq.secretName }}
+                key: rabbitmq-username
+          - name: RabbitMq__Password
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.rabbitmq.secretName }}
+                key: rabbitmq-password
+        ports:
+        - containerPort: {{ .Values.stockapi.targetPort | default 80 }}

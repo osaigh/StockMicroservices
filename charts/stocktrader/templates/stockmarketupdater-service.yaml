@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service   
+metadata:
+  name: stockmarketupdater
+spec:
+  selector:
+    app: stockmarketupdater
+  ports:
+  - name: default
+    protocol: TCP
+    port: {{ .Values.stockmarketupdater.port | default 44444 }}
+    targetPort: {{ .Values.stockmarketupdater.port | default 44444 }}
+  type: NodePort
