@@ -1,0 +1,18 @@
+apiVersion : apps/v1
+kind: Deployment
+metadata:
+  name: loki
+spec:
+  selector:
+    matchLabels:
+      app: loki
+  template:
+    metadata:
+      labels:
+        app: loki
+    spec:
+      containers:
+        - name: loki
+          image: {{ .Values.loki.image }}
+          ports:
+            - containerPort: {{ .Values.loki.targetPort }}

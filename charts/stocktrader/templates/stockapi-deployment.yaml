@@ -46,5 +46,9 @@ spec:
               secretKeyRef:
                 name: {{ .Values.rabbitmq.secretName }}
                 key: rabbitmq-password
+          - name: OTEL_EXPORTER_OTLP_ENDPOINT
+            value: {{ .Values.stockapi.otlp.endpoint | default "http://otel-collector:4318" }}
+          - name: OTEL_SERVICE_NAME
+            value: {{ .Values.stockapi.otlp.serviceName | default "StockMicroservicesAPI" }}
         ports:
         - containerPort: {{ .Values.stockapi.targetPort | default 80 }}

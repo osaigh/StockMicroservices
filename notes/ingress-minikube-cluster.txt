@@ -14,3 +14,6 @@
 7. run kubectl get pods -n ingress-nginx to verify the pod for ingress controller is running
 8. Now run minikube tunnel 
 9. Then apply your definition with the ingress kubectl apply -f .\nginx.yaml 
+
+helm install stocktrader ./charts/stocktrader/ --namespace stocktrader --values ./charts/stocktrader/values.yaml
+ helm uninstall stocktrader --namespace stocktrader

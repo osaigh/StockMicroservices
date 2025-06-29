@@ -14,6 +14,7 @@ spec:
       containers:
       - name: stockidentityserver
         image: {{ .Values.stockidentityserver.image }}
+        imagePullPolicy: Always
         env:
           - name: ASPNETCORE_ENVIRONMENT
             valueFrom:

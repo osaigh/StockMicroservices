@@ -24,7 +24,10 @@ services:
       dockerfile: opentelemetry/loki/Dockerfile
 
   prometheus:
-    image: prom/prometheus:latest
+    image: ${DOCKER_REGISTRY-}prometheus
+    build:
+      context: .
+      dockerfile: opentelemetry/prometheus/Dockerfile
 
   envoy:
     image: ${DOCKER_REGISTRY-}envoy
