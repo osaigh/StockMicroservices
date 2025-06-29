@@ -1,25 +1,7 @@
 version: '3.4'
 
 services:
-  # otel-collector:
-  #   container_name: otel-collector
-  #   command: ["--config=/etc/otel-collector-config.yaml"]
-  #   volumes:
-  #     - ./opentelemetry/collector/collector-config.yaml:/etc/otel-collector-config.yaml
-  #   ports:
-  #     - "4317:4317"   # OTLP gRPC
-  #     - "4318:4318"   # OTLP HTTP
-  #     - "7777:7777"   # Prometheus metrics
-  
-  # tempo:
-  #   image: grafana/tempo:latest
-  #   command: ["-config.file=/etc/tempo.yaml"]
-  #   volumes:
-  #     - ./opentelemetry/tempo/tempo.yaml:/etc/tempo.yaml
-  #   ports:
-  #     - "3200:3200"
-  #     - "7778:7778"   # OTLP HTTP for Tempo
-
+ 
   grafana:
     container_name: grafana
     ports:
@@ -29,13 +11,6 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
       - grafana-data:/var/lib/grafana
-  
-
-  # loki:
-    # container_name: loki
-    # command: ["-config.file=/etc/loki/local-config.yaml"]
-    # ports:
-    #   - "3100:3100"
 
   prometheus:
     container_name: prometheus
