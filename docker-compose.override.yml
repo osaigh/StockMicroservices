@@ -1,6 +1,50 @@
 version: '3.4'
 
 services:
+  # otel-collector:
+  #   container_name: otel-collector
+  #   command: ["--config=/etc/otel-collector-config.yaml"]
+  #   volumes:
+  #     - ./opentelemetry/collector/collector-config.yaml:/etc/otel-collector-config.yaml
+  #   ports:
+  #     - "4317:4317"   # OTLP gRPC
+  #     - "4318:4318"   # OTLP HTTP
+  #     - "7777:7777"   # Prometheus metrics
+  
+  # tempo:
+  #   image: grafana/tempo:latest
+  #   command: ["-config.file=/etc/tempo.yaml"]
+  #   volumes:
+  #     - ./opentelemetry/tempo/tempo.yaml:/etc/tempo.yaml
+  #   ports:
+  #     - "3200:3200"
+  #     - "7778:7778"   # OTLP HTTP for Tempo
+
+  grafana:
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+  
+
+  # loki:
+    # container_name: loki
+    # command: ["-config.file=/etc/loki/local-config.yaml"]
+    # ports:
+    #   - "3100:3100"
+
+  prometheus:
+    container_name: prometheus
+    command: ["--config.file=/etc/prometheus/prometheus.yml"]
+    volumes:
+      - ./opentelemetry/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+
   envoy:
     container_name: envoy
     restart: always
@@ -35,6 +79,9 @@ services:
     depends_on:
       - rabbitmq
       - stockmicroservices.identityserver
+      - otel-collector
+      - loki
+      - prometheus
     environment:
       - ASPNETCORE_URLS=http://+:80
       - ASPNETCORE_ENVIRONMENT=Development
@@ -44,6 +91,8 @@ services:
       - RabbitMq:Hostname=rabbitmq
       - RabbitMq:Username=user
       - RabbitMq:Password=password
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+      - OTEL_SERVICE_NAME=StockMicroservicesAPI
     ports:
       - "44300:80"
 

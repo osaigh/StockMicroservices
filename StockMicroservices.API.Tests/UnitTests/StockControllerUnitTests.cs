@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using Microsoft.Extensions.Logging;
 using Moq;
 using StockMicroservices.API.Controllers.api;
 using StockMicroservices.API.Repository;
@@ -39,7 +40,7 @@ namespace StockMicroservices.API.Tests.UnitTests
             mockRepo.Setup(repo => repo.GetAllAsync()).ReturnsAsync(Utilities.GetTestStocks());
 
             //Controller
-            var stockController = new StockController(mockRepo.Object, mapper);
+            var stockController = new StockController((new Mock<ILogger<StockController>>()).Object, new Utils.Instrumentation(),mockRepo.Object, mapper);
 
             //Act
             var result = await stockController.Get();
@@ -68,7 +69,7 @@ namespace StockMicroservices.API.Tests.UnitTests
                                 .FirstOrDefault(s => s.Id == _id);
             });
 
-            var stockController = new StockController(mockRepo.Object, mapper);
+            var stockController = new StockController((new Mock<ILogger<StockController>>()).Object, new Utils.Instrumentation(), mockRepo.Object, mapper);
 
             //Act
             var result = await stockController.Get(stockId);
@@ -96,7 +97,7 @@ namespace StockMicroservices.API.Tests.UnitTests
                                 .FirstOrDefault(s => s.Id == _id);
             });
 
-            var stockController = new StockController(mockRepo.Object, mapper);
+            var stockController = new StockController((new Mock<ILogger<StockController>>()).Object, new Utils.Instrumentation(), mockRepo.Object, mapper);
 
             //Act
             var stock = await stockController.Get(stockId);

@@ -1,6 +1,31 @@
 version: '3.4'
 
 services:
+  otel-collector:
+    image: ${DOCKER_REGISTRY-}otel-collector
+    build:
+      context: .
+      dockerfile: opentelemetry/collector/Dockerfile
+
+  tempo:
+    image: ${DOCKER_REGISTRY-}tempo
+    build:
+      context: .
+      dockerfile: opentelemetry/tempo/Dockerfile
+
+  grafana:
+    image: grafana/grafana:latest
+
+
+  loki:
+    image: ${DOCKER_REGISTRY-}loki
+    build:
+      context: .
+      dockerfile: opentelemetry/loki/Dockerfile
+
+  prometheus:
+    image: prom/prometheus:latest
+
   envoy:
     image: ${DOCKER_REGISTRY-}envoy
     build:
@@ -54,5 +79,6 @@ services:
       context: .
       dockerfile: stockwebstatus/Dockerfile
 
-    
+volumes:
+  grafana-data:
   
