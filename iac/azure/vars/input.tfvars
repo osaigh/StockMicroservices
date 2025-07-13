@@ -1,0 +1,7 @@
+resource_group_name     = "steamenginerg"
+resource_group_location = "eastus"
+aks_cluster_name        = "steamengineAksCluster"
+dns_prefix              = "steamengineaksdns"
+aks_cluster_dns_prefix = "steamengineaksdns"
+vm_size                 = "Standard_D2_v2"
+subscription_id          = "57b5f006-aaf3-46c1-a30e-2ab1e117110c"
