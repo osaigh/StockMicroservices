@@ -52,6 +52,7 @@ jobs:
 
       - name: Deploy Argo CD to AKS
         run: |
-          kubectl apply -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+          kubectl create namespace argocd
+          kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
           echo "Waiting for Argo CD server..."
           kubectl apply -f "$GITHUB_WORKSPACE/iac/azure/argocd-service-patch.yaml"
