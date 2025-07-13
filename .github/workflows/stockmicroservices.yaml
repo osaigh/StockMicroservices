@@ -31,7 +31,9 @@ jobs:
           terraform init
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve -vars-file=vars/input.tfvars
+        run: |
+          cd iac/azure
+          terraform apply -auto-approve -vars-file="vars/input.tfvars"
 
       - name: Get AKS credentials
         run: |
