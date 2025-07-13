@@ -35,7 +35,7 @@ jobs:
           cd iac/azure
           pwd
           echo "$GITHUB_WORKSPACE/iac/azure/vars/input.tfvars"
-          terraform apply -auto-approve -vars-file="$GITHUB_WORKSPACE/iac/azure/vars/input.tfvars"
+          terraform apply -auto-approve -var-file="$GITHUB_WORKSPACE/iac/azure/vars/input.tfvars"
 
       - name: Get AKS credentials
         run: |
