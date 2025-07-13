@@ -24,11 +24,11 @@ jobs:
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
 
-      - name: change Working Directory
-        run: cd iac/azure
-
       - name: Terraform Init
-        run: terraform init
+        run: |
+          cd iac/azure
+          pwd
+          terraform init
 
       - name: Terraform Apply
         run: terraform apply -auto-approve -vars-file=vars/input.tfvars
