@@ -34,6 +34,10 @@ jobs:
         run: |
           cd iac/azure
           pwd
+          echo "Using ARM_CLIENT_ID: $ARM_CLIENT_ID"
+          echo "Using ARM_CLIENT_SECRET: $ARM_CLIENT_SECRET"
+          echo "Using ARM_SUBSCRIPTION_ID: $ARM_SUBSCRIPTION_ID"
+          echo "Using ARM_TENANT_ID: $ARM_TENANT_ID"
           echo "$GITHUB_WORKSPACE/iac/azure/vars/input.tfvars"
           terraform apply -auto-approve -var-file="$GITHUB_WORKSPACE/iac/azure/vars/input.tfvars"
 
