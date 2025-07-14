@@ -17,7 +17,7 @@ spec:
         ports:
         - containerPort: {{ .Values.stockapigateway.targetPort | default 80 }}
         env:
-        - name: ENVOY_UID
-          value: 0
-        - name: ENVOY_GID
-          value: 0
+          - name: ENVOY_UID
+            value: 0
+          - name: ENVOY_GID
+            value: 0
