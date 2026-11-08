@@ -1,48 +1,33 @@
-﻿using Microsoft.Extensions.Options;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Mongo2Go;
 using MongoDB.Driver;
 using StockMicroservices.API.Data;
-using StockMicroservices.API.Models;
 using DAO = StockMicroservices.API.Models.Daos;
-using DTO = StockMicroservices.API.Models.Dtos;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace StockMicroservices.API.Tests.Persistence
 {
-    public class MongoDbTestContext : IStockDbContext
+    public sealed class MongoDbTestContext : IStockDbContext, IDisposable
     {
-        public MongoClient Client { get; }
+        private readonly MongoDbRunner _mongoRunner;
+
+        public MongoDbTestContext(string databaseName)
+        {
+            _mongoRunner = MongoDbRunner.Start();
+            ConnectionString = _mongoRunner.ConnectionString;
+
+            var client = new MongoClient(ConnectionString);
+            Database = client.GetDatabase(databaseName);
+            StockCollection = Database.GetCollection<DAO.Stock>("Stock");
+        }
 
         public IMongoDatabase Database { get; }
 
         public string ConnectionString { get; }
 
-        private readonly MongoDbRunner _mongoRunner;
-
         public IMongoCollection<DAO.Stock> StockCollection { get; }
 
-        public MongoDbTestContext(string databaseName)
-        {
-            // initializes the instance
-            _mongoRunner = MongoDbRunner.Start();
-
-            // store the connection string with the chosen port number
-            ConnectionString = _mongoRunner.ConnectionString;
-
-            // create a client and database for use outside the class
-            Client = new MongoClient(ConnectionString);
-
-            Database = Client.GetDatabase(databaseName);
-
-            // initialize the Stock collection
-            StockCollection = Database.GetCollection<DAO.Stock>("Stock");
-        }
-
-        #region Methods (CRUD)
         public async Task<List<DAO.Stock>> GetStocksAsync() =>
             await StockCollection.Find(_ => true).ToListAsync();
 
@@ -61,15 +46,9 @@ namespace StockMicroservices.API.Tests.Persistence
         public async Task RemoveStockAsync(string id) =>
             await StockCollection.DeleteOneAsync(x => x.Id == id);
 
-        #endregion
-
-        public void SeedData(List<DAO.Stock> stocks)
+        public void Dispose()
         {
-            //Add sample stocks
-            foreach (var stock in stocks)
-            {
-                StockCollection.InsertOne(stock);
-            }
+            _mongoRunner.Dispose();
         }
     }
 }

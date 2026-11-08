@@ -1,6 +1,6 @@
-﻿using StockMicroservices.API.Models.Daos;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using StockMicroservices.API.Models.Daos;
 
 namespace StockMicroservices.API.Data
 {
@@ -17,6 +17,5 @@ namespace StockMicroservices.API.Data
         Task UpdateStockAsync(string id, Stock stock);
 
         Task RemoveStockAsync(string id);
-
     }
 }

@@ -1,20 +1,17 @@
+using System;
+using System.Text.Json;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Http;
-using Newtonsoft.Json;
+using Microsoft.IdentityModel.Tokens;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
-using Microsoft.IdentityModel.Tokens;
 
 namespace StockMicroservices.APIGateway
 {
@@ -27,75 +24,95 @@ namespace StockMicroservices.APIGateway
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            //var authenticationProviderKey = "stockIdentitykey";
-            string identityServerUrl = Configuration.GetValue(typeof(string), "IdentityServerUrl").ToString();
-            string apiScope = Configuration.GetValue(typeof(string), "APIScope").ToString();
-            services.AddAuthentication(options => options.DefaultScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme)
-                 .AddJwtBearer("Bearer", config =>
-                 {
-                     config.Authority = identityServerUrl;
-                     config.RequireHttpsMetadata = false;
-                     config.Audience = apiScope;
-                     config.TokenValidationParameters = new TokenValidationParameters
-                     {
-                         ValidateAudience = false,
-                         ValidateIssuer = false
-                     };
-                 });
+            var identityServerUrl = RequireSetting("IdentityServerUrl");
+            var apiScope = RequireSetting("APIScope");
 
-            services.AddOcelot();
-            services.AddCors(config =>
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.Authority = identityServerUrl;
+                    options.Audience = apiScope;
+                    options.RequireHttpsMetadata = Configuration.GetValue("IdentityServer:RequireHttpsMetadata", false);
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateAudience = true,
+                        ValidateIssuer = true,
+                        NameClaimType = "name",
+                        RoleClaimType = "role",
+                    };
+                });
+
+            services.AddAuthorization();
+            services.AddOcelot(Configuration);
+            services.AddHealthChecks();
+
+            var allowedOrigins = Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+                ?? Array.Empty<string>();
+
+            services.AddCors(options =>
             {
-                config.AddPolicy("AllowAll",
-                                 p =>
-                                 {
-                                     p.AllowAnyOrigin();
-                                     p.AllowAnyHeader();
-                                     p.AllowAnyMethod();
+                options.AddPolicy("Default", policy =>
+                {
+                    if (allowedOrigins.Length == 0)
+                    {
+                        policy.AllowAnyOrigin();
+                    }
+                    else
+                    {
+                        policy.WithOrigins(allowedOrigins);
+                    }
 
-                                 });
+                    policy.AllowAnyHeader().AllowAnyMethod();
+                });
             });
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
+            else
+            {
+                app.UseExceptionHandler(errorApp =>
+                {
+                    errorApp.Run(async context =>
+                    {
+                        var feature = context.Features.Get<IExceptionHandlerFeature>();
+                        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                        context.Response.ContentType = "application/problem+json";
 
-            app.UseExceptionHandler(appError =>
-                                    {
-                                        appError.Run(async context =>
-                                                     {
-                                                         IExceptionHandlerFeature contextFeature = context.Features.Get<IExceptionHandlerFeature>();
-                                                         if (contextFeature != null)
-                                                         {
-                                                             if (contextFeature.Error != null)
-                                                             {
-                                                                 Console.WriteLine(contextFeature.Error.Message);
-                                                             }
-                                                         }
-                                                     });
-                                    });
+                        await context.Response.WriteAsync(JsonSerializer.Serialize(new
+                        {
+                            message = "An unexpected error occurred.",
+                            detail = env.IsDevelopment() ? feature?.Error?.Message : null,
+                        }));
+                    });
+                });
+            }
 
-            //app.UseHttpsRedirection();
-            app.UseCors("AllowAll");
+            app.UseCors("Default");
             app.UseRouting();
+
+            app.UseHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
+            app.UseHealthChecks("/health/ready");
+
             app.UseAuthentication();
-            app.UseOcelot();
-            //app.UseOcelot(new OcelotPipelineConfiguration
-            //{
-            //    AuthenticationMiddleware = async (cpt, est) =>
-            //    {
-            //        Console.WriteLine("Ocelot Auth");
-            //        await est.Invoke();
-            //    }
-            //});
+            app.UseOcelot().GetAwaiter().GetResult();
+        }
+
+        private string RequireSetting(string key)
+        {
+            var value = Configuration[key];
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                throw new InvalidOperationException($"Configuration value '{key}' is required.");
+            }
+
+            return value;
         }
     }
 }

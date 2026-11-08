@@ -1,28 +1,29 @@
-import React, { useState, useEffect, useContext } from "react";
-import { Navigate , useNavigate } from "react-router-dom";
+import { useEffect, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import { UserAuthenticationContext } from "../../context/user-manager-context";
 
 export function SignOutCallback() {
   const { userAuthenticationService } = useContext(UserAuthenticationContext);
   const navigate = useNavigate();
-  console.log("SignOutCallback called");
+
   useEffect(() => {
-    console.log("SignOutCallback UseEffect");
-    const handler = () => {
-      console.log("SignOutCallback handler");
-      navigate.push("/");
+    let cancelled = false;
+
+    userAuthenticationService
+      .signoutRedirectCallback()
+      .then(() => {
+        if (!cancelled) {
+          navigate("/", { replace: true });
+        }
+      })
+      .catch((error) => {
+        console.error("Sign-out callback failed", error);
+      });
+
+    return () => {
+      cancelled = true;
     };
+  }, [navigate, userAuthenticationService]);
 
-    async function signoutasync() {
-      await userAuthenticationService
-        .signoutRedirectCallback()
-        .then(handler)
-        .catch(function (e) {
-          console.error(e);
-        });
-    }
-
-    signoutasync();
-  }, [navigate]);
-  return <div>Redirecting</div>;
+  return <div>Signing you out...</div>;
 }

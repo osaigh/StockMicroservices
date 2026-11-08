@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stockmarketupdater
+  labels:
+    app: stockmarketupdater
+    app.kubernetes.io/part-of: stockmicroservices
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stockmarketupdater
+  template:
+    metadata:
+      labels:
+        app: stockmarketupdater
+    spec:
+      containers:
+        - name: stockmarketupdater
+          image: stockmarketupdater:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DOTNET_ENVIRONMENT
+              value: Production
+            - name: RabbitMq__Hostname
+              value: rabbitmq
+            - name: RabbitMq__Port
+              value: "5672"
+            - name: RabbitMq__Username
+              valueFrom:
+                secretKeyRef:
+                  name: stock-secret
+                  key: rabbitmq-username
+            - name: RabbitMq__Password
+              valueFrom:
+                secretKeyRef:
+                  name: stock-secret
+                  key: rabbitmq-password
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi

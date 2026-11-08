@@ -1,22 +1,19 @@
-#See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
-
-FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
-WORKDIR /app
-EXPOSE 80
-EXPOSE 443
-
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
-COPY ["StockMicroservices.APIGateway/StockMicroservices.APIGateway.csproj", "StockMicroservices.APIGateway/"]
-RUN dotnet restore "StockMicroservices.APIGateway/StockMicroservices.APIGateway.csproj"
+
+COPY Directory.Build.props ./
+COPY StockMicroservices.APIGateway/StockMicroservices.APIGateway.csproj StockMicroservices.APIGateway/
+RUN dotnet restore StockMicroservices.APIGateway/StockMicroservices.APIGateway.csproj
+
 COPY . .
-WORKDIR "/src/StockMicroservices.APIGateway"
-RUN dotnet build "StockMicroservices.APIGateway.csproj" -c Release -o /app/build
+RUN dotnet publish StockMicroservices.APIGateway/StockMicroservices.APIGateway.csproj \
+    --configuration Release \
+    --output /app/publish \
+    /p:UseAppHost=false
 
-FROM build AS publish
-RUN dotnet publish "StockMicroservices.APIGateway.csproj" -c Release -o /app/publish
-
-FROM base AS final
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
-COPY --from=publish /app/publish .
+ENV ASPNETCORE_URLS=http://+:80
+EXPOSE 80
+COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "StockMicroservices.APIGateway.dll"]

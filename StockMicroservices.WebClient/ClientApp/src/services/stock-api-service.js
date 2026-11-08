@@ -1,42 +1,15 @@
 import axios from "axios";
 
 export default class StockApiService {
-  baseURL;
-
-  constructor(_baseURL) {
-    this.baseURL = _baseURL;
+  constructor(baseURL) {
+    this.baseURL = baseURL;
   }
 
-  getAllStocks = (accessToken = "") => {
+  getAllStocks = (accessToken) => {
+    const config = accessToken
+      ? { headers: { Authorization: `Bearer ${accessToken}` } }
+      : undefined;
 
-      if (accessToken.length > 0) {
-          const config = {
-              headers: { Authorization: `Bearer ${accessToken}` }
-          };
-          return axios.get(this.baseURL + "stock", config);
-      } else {
-          return axios.get(this.baseURL + "stock");
-      }
-    
+    return axios.get(`${this.baseURL}stock`, config);
   };
-
-  create = (newObject) => {
-    return axios.post(this.baseURL, newObject);
-  };
-
-  update = (id, newObject) => {
-    return axios.put(`${this.baseURL}/${id}`, newObject);
-  };
-
-  //  getStockHistory = (stockId, accessToken = "") => {
-  //      if (accessToken.length > 0) {
-  //          const config = {
-  //              headers: { Authorization: `Bearer ${accessToken}` }
-  //          };
-  //          return axios.get(this.baseURL + "stockHistory/" + stockId, config);
-  //      } else {
-  //          return axios.get(this.baseURL + "stockHistory/" + stockId);
-  //      }
-    
-  //};
 }

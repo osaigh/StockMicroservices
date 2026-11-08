@@ -1,3 +1,3 @@
-import { Component, createContext } from "react";
+import { createContext } from "react";
 
 export const StockApiContext = createContext(null);

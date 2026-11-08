@@ -4,15 +4,11 @@ namespace StockMicroservices.API.Authorization
 {
     public class StockAPIRequirement : IAuthorizationRequirement
     {
-        #region Properties
-        public string APIScope { get; set; }
-        #endregion
+        public string APIScope { get; }
 
-        #region Constructor
         public StockAPIRequirement(string apiScope)
         {
-            this.APIScope = apiScope;
+            APIScope = apiScope;
         }
-        #endregion
     }
 }

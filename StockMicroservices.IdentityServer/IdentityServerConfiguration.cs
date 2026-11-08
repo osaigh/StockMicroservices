@@ -1,74 +1,100 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using IdentityModel;
-using IdentityServer4;
-using IdentityServer4.Models;
+using Duende.IdentityServer;
+using Duende.IdentityServer.Models;
+using Microsoft.Extensions.Configuration;
 
 namespace StockMicroservices.IdentityServer
 {
-    public class IdentityServerConfiguration
+    public static class IdentityServerConfiguration
     {
+        public const string ApiName = "StockMicroservicesAPI";
+
         public static IEnumerable<ApiResource> GetApis()
         {
-            return new List<ApiResource>() { new ApiResource("ApiOne"), new ApiResource("ApiTwo"), new ApiResource("StockMicroservicesAPI") };
+            return new[]
+            {
+                new ApiResource(ApiName, "Stock Microservices API")
+                {
+                    Scopes = { ApiName },
+                },
+            };
         }
 
         public static IEnumerable<ApiScope> GetApiScopes()
         {
-            return new List<ApiScope>() { new ApiScope("ApiOne"), new ApiScope("ApiTwo"), new ApiScope("StockMicroservicesAPI") };
+            return new[] { new ApiScope(ApiName, "Stock Microservices API") };
         }
 
         public static IEnumerable<IdentityResource> GetIdentityResources()
         {
-            return new List<IdentityResource>()
-                   {
-                       new IdentityResources.OpenId(),
-                       new IdentityResources.Email(),
-                       new IdentityResources.Profile(),
-                   };
+            return new IdentityResource[]
+            {
+                new IdentityResources.OpenId(),
+                new IdentityResources.Profile(),
+                new IdentityResources.Email(),
+            };
         }
 
-        public static IEnumerable<Client> GetClients()
+        public static IEnumerable<Client> GetClients(IConfiguration configuration)
         {
-            return new List<Client>(){
-                                         new Client()
-                                         {
-                                             ClientId = "client_id_react",
-                                             RedirectUris = { "http://localhost:44100/SignInCallback" },
-                                             PostLogoutRedirectUris = { "http://localhost:44100/SignOutCallback" },
-                                             AllowedGrantTypes = GrantTypes.Implicit,
-                                             AllowedScopes = {IdentityServerConstants.StandardScopes.OpenId, IdentityServerConstants.StandardScopes.Profile, IdentityServerConstants.StandardScopes.Email, "StockMicroservicesAPI"},
-                                             AllowAccessTokensViaBrowser = true,
-                                             AllowOfflineAccess = true,
-                                             RequireClientSecret = false,
-                                             RequireConsent = false,
-                                             AllowedCorsOrigins = { "http://localhost:44100" },
-                                             AccessTokenLifetime = 86400,
-                                         },
-                                         new Client()
-                                         {
-                                             ClientId = "client_id_react2",
-                                             RedirectUris = { "http://localhost:3000/SignInCallback" },
-                                             PostLogoutRedirectUris = { "http://localhost:3000/SignOutCallback" },
-                                             AllowedGrantTypes = GrantTypes.Implicit,
-                                             AllowedScopes = {IdentityServerConstants.StandardScopes.OpenId, IdentityServerConstants.StandardScopes.Profile, IdentityServerConstants.StandardScopes.Email, "StockMicroservicesAPI"},
-                                             AllowAccessTokensViaBrowser = true,
-                                             AllowOfflineAccess = true,
-                                             RequireClientSecret = false,
-                                             RequireConsent = false,
-                                             AllowedCorsOrigins = { "http://localhost:3000" },
-                                             AccessTokenLifetime = 86400,
-                                         },
+            var webClientUrl = GetWebClientUrl(configuration);
+            var webClientDevUrl = GetWebClientDevUrl(configuration);
 
-                                     };
+            return new List<Client>
+            {
+                CreateBrowserClient("client_id_react", webClientUrl),
+                CreateBrowserClient("client_id_react_dev", webClientDevUrl),
+            };
         }
 
+        public static string[] GetAllowedCorsOrigins(IConfiguration configuration)
+        {
+            var configured = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+            var origins = configured
+                .Concat(new[] { GetWebClientUrl(configuration), GetWebClientDevUrl(configuration) })
+                .Where(origin => !string.IsNullOrWhiteSpace(origin))
+                .Select(origin => origin.TrimEnd('/'))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
 
-        /*****Open Id Configuration *******/
-        /*
-         * https://localhost:44376/.well-known/openid-configuration* 
-         */
+            return origins;
+        }
+
+        private static Client CreateBrowserClient(string clientId, string origin)
+        {
+            return new Client
+            {
+                ClientId = clientId,
+                ClientName = "Stock web client",
+                RedirectUris = { $"{origin}/signincallback" },
+                PostLogoutRedirectUris = { $"{origin}/signoutcallback" },
+                AllowedGrantTypes = GrantTypes.Implicit,
+                AllowedScopes =
+                {
+                    IdentityServerConstants.StandardScopes.OpenId,
+                    IdentityServerConstants.StandardScopes.Profile,
+                    IdentityServerConstants.StandardScopes.Email,
+                    ApiName,
+                },
+                AllowAccessTokensViaBrowser = true,
+                RequireClientSecret = false,
+                RequireConsent = false,
+                AllowedCorsOrigins = { origin },
+                AccessTokenLifetime = 3600,
+                IdentityTokenLifetime = 300,
+            };
+        }
+
+        private static string GetWebClientUrl(IConfiguration configuration)
+        {
+            return (configuration["WebClientUrl"] ?? "http://localhost:44100").TrimEnd('/');
+        }
+
+        private static string GetWebClientDevUrl(IConfiguration configuration)
+        {
+            return (configuration["WebClientDevUrl"] ?? "http://localhost:3000").TrimEnd('/');
+        }
     }
 }

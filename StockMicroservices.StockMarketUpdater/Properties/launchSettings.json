@@ -3,13 +3,13 @@
     "StockMicroservices.StockMarketUpdater": {
       "commandName": "Project",
       "environmentVariables": {
-        "ENVIRONMENT": "local"
+        "DOTNET_ENVIRONMENT": "Development"
       }
     },
     "Docker": {
       "commandName": "Docker",
       "environmentVariables": {
-        "Environment": "local"
+        "DOTNET_ENVIRONMENT": "Production"
       }
     }
   }

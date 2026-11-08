@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using StockMicroservices.API.Models;
@@ -12,24 +9,17 @@ namespace StockMicroservices.API.Data
 {
     public class StockDbContext : IStockDbContext
     {
-        #region Properties
+        public const string CollectionName = "Stock";
+
         private readonly IMongoCollection<Stock> _stocksCollection;
-        #endregion
 
-        #region Constructor
-        public StockDbContext(IOptions<DatabaseSetting> databaseSettings)
+        public StockDbContext(IMongoClient mongoClient, IOptions<DatabaseSetting> databaseSettings)
         {
-            string connectionString = string.Format("mongodb://{0}:{1}@{2}:27017/{3}", databaseSettings.Value.DbUser, databaseSettings.Value.DbPassword, databaseSettings.Value.Hostname, databaseSettings.Value.Name);
-
-            var mongoClient = new MongoClient(connectionString);
-
-            var stockDatabase = mongoClient.GetDatabase(databaseSettings.Value.Name);
-
-            this._stocksCollection = stockDatabase.GetCollection<Stock>("Stock");
+            var settings = databaseSettings.Value;
+            var database = mongoClient.GetDatabase(settings.Name);
+            _stocksCollection = database.GetCollection<Stock>(CollectionName);
         }
-        #endregion
 
-        #region Methods (CRUD)
         public async Task<List<Stock>> GetStocksAsync() =>
             await _stocksCollection.Find(_ => true).ToListAsync();
 
@@ -47,7 +37,5 @@ namespace StockMicroservices.API.Data
 
         public async Task RemoveStockAsync(string id) =>
             await _stocksCollection.DeleteOneAsync(x => x.Id == id);
-
-        #endregion
     }
 }

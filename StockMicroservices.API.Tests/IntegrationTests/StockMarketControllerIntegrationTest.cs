@@ -1,66 +1,39 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Net;
 using System.Net.Http;
-using System.Text;
+using System.Net.Http.Json;
 using System.Threading.Tasks;
-using DAOs = StockMicroservices.API.Models.Daos;
-using DTOs = StockMicroservices.API.Models.Dtos;
-using Newtonsoft.Json;
-using StockMicroservices.API.Models;
 using Xunit;
+using DTOs = StockMicroservices.API.Models.Dtos;
 
 namespace StockMicroservices.API.Tests.IntegrationTests
 {
     public class StockMarketControllerIntegrationTest : IClassFixture<CustomWebApplicationFactory<Startup>>
     {
-        #region Fields
+        private const string StockMarketUrl = "api/stockmarket/";
+        private const string StockUrl = "api/stock/";
+        private const string StockId = "e656bb6f9a358bcc3ae63c61";
 
-        private string stockMarketUrl = "api/stockmarket/";
-        private string stockUrl = "api/stock/";
-        private CustomWebApplicationFactory<Startup> _Factory;
-        #endregion
+        private readonly CustomWebApplicationFactory<Startup> _factory;
 
-        #region Constructor
         public StockMarketControllerIntegrationTest(CustomWebApplicationFactory<Startup> factory)
         {
-            _Factory = factory;
+            _factory = factory;
         }
-        #endregion
 
-        #region Methods
         [Fact]
         public async Task Put_ValidRequest_UpdatesStockPrices()
         {
-            //Arrange
-            var client = _Factory.CreateClient();
-            ApiRequest apiRequest = new ApiRequest()
-            {
-                RequestId = Guid.NewGuid().ToString()
-            };
-            string apiRequestString = JsonConvert.SerializeObject(apiRequest);
-            string stockId = "e656bb6f9a358bcc3ae63c61";
-            double oldPrice = 0.0;
-            double newPrice = 0.0;
+            var client = _factory.CreateClient();
 
-            //Act
-            //Get old price
-            var response = await client.GetAsync(stockUrl + stockId);
-            var jsonString = await response.Content.ReadAsStringAsync();
-            var stock = JsonConvert.DeserializeObject<DTOs.Stock>(jsonString);
-            oldPrice = stock.Price;
+            var before = await client.GetFromJsonAsync<DTOs.Stock>(StockUrl + StockId);
+            Assert.NotNull(before);
 
-            //Update the prices
-            response = await client.PutAsync(stockMarketUrl, new StringContent(apiRequestString, Encoding.UTF8, "application/json"));
+            var response = await client.PutAsync(StockMarketUrl, new StringContent(string.Empty));
+            Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
-            //Get new price
-            response = await client.GetAsync(stockUrl + stockId);
-            jsonString = await response.Content.ReadAsStringAsync();
-            stock = JsonConvert.DeserializeObject<DTOs.Stock>(jsonString);
-            newPrice = stock.Price;
-
-            //Assert
-            Assert.NotEqual(oldPrice, newPrice);
+            var after = await client.GetFromJsonAsync<DTOs.Stock>(StockUrl + StockId);
+            Assert.NotNull(after);
+            Assert.NotEqual(before!.Price, after!.Price);
         }
-        #endregion
     }
 }

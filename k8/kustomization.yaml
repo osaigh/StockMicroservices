@@ -1,0 +1,38 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: stock
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secret.yaml
+  - mongo.yaml
+  - rabbitmq.yaml
+  - mongo-express.yaml
+  - stockidentityserver.yaml
+  - stockapi.yaml
+  - stockapigateway.yaml
+  - stockmarketupdater.yaml
+  - stockwebclient.yaml
+
+# Override an image for a registry without editing the manifests, for example:
+#   kubectl apply -k k8
+#   kustomize edit set image stockapi=ghcr.io/acme/stockapi:1.2.3
+images:
+  - name: mongo
+    newTag: "7.0"
+  - name: rabbitmq
+    newTag: 3.13-management-alpine
+  - name: mongo-express
+    newTag: 1.0.2
+  - name: stockidentityserver
+    newTag: latest
+  - name: stockapi
+    newTag: latest
+  - name: stockapigateway
+    newTag: latest
+  - name: stockmarketupdater
+    newTag: latest
+  - name: stockwebclient
+    newTag: latest

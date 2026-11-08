@@ -1,46 +1,30 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using StockMicroservices.API.Data;
 
 namespace StockMicroservices.API.Services
 {
     public class StockMarketService : IStockMarketService
     {
-        #region Fields
-        private readonly Random _random = new Random(((int)DateTime.Now.Ticks / 1000));
-        private readonly IStockDbContext _StockDbContext;
-        //private readonly IServiceProvider _serviceProvider;
-        #endregion
+        private readonly IStockDbContext _stockDbContext;
 
-        #region Constructor
         public StockMarketService(IStockDbContext stockDbContext)
         {
-            _StockDbContext = stockDbContext;
+            _stockDbContext = stockDbContext;
         }
-        #endregion
 
-        #region Methods
         public async Task UpdateStockPrices()
         {
-            //var _StockDbContext = (StockDbContext)_serviceProvider.GetService(typeof(StockDbContext));
-            var stocks = await _StockDbContext.GetStocksAsync();
+            var stocks = await _stockDbContext.GetStocksAsync();
+
             foreach (var stock in stocks)
             {
-                double newPrice = stock.Price + Convert.ToDouble((Convert.ToDecimal(_random.NextDouble() * 10f) - 5m));
+                var change = (Random.Shared.NextDouble() * 10d) - 5d;
+                var newPrice = Math.Round(stock.Price + change, 2);
                 stock.Price = newPrice > 0 ? newPrice : 1;
-                await _StockDbContext.UpdateStockAsync(stock.Id, stock);
+
+                await _stockDbContext.UpdateStockAsync(stock.Id, stock);
             }
-
-            
         }
-
-        #endregion
-
     }
 }

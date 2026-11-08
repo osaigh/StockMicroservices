@@ -1,135 +1,110 @@
-﻿using MongoDB.Bson;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using MongoDB.Bson;
 using StockMicroservices.API.Data;
 using StockMicroservices.API.Models.Daos;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace StockMicroservices.API.Tests
 {
     public static class Utilities
     {
-        #region Code
-        public static void InitializeDbForTests(IStockDbContext db)
+        public static async Task InitializeDbForTestsAsync(IStockDbContext db)
         {
-            //Stocks
-            List<Stock> stocks = new List<Stock>();
-            var stock1 = new Stock()
+            var microsoft = new Stock
             {
-                Id = (new ObjectId("e656bb6f9a358bcc3ae63c61")).ToString(),
+                Id = new ObjectId("e656bb6f9a358bcc3ae63c61").ToString(),
                 Name = "Microsoft",
                 Price = 85.0,
                 Volume = 1000,
-                StockHistories = new List<StockHistory>()
+                StockHistories = new List<StockHistory>
+                {
+                    new StockHistory
+                    {
+                        StockId = "e656bb6f9a358bcc3ae63c61",
+                        Date = new DateTimeOffset(new DateTime(2018, 12, 2)),
+                        Price = 45,
+                    },
+                    new StockHistory
+                    {
+                        StockId = "e656bb6f9a358bcc3ae63c61",
+                        Date = new DateTimeOffset(new DateTime(2020, 12, 2)),
+                        Price = 70,
+                    },
+                },
             };
 
-            var stock2 = new Stock()
+            var google = new Stock
             {
-                Id = (new ObjectId("057340ee83ddedcbeef5b1ab")).ToString(),
+                Id = new ObjectId("057340ee83ddedcbeef5b1ab").ToString(),
                 Name = "Google",
                 Price = 135.0,
                 Volume = 1300,
-                StockHistories = new List<StockHistory>()
+                StockHistories = new List<StockHistory>
+                {
+                    new StockHistory
+                    {
+                        StockId = "057340ee83ddedcbeef5b1ab",
+                        Date = new DateTimeOffset(new DateTime(2019, 12, 2)),
+                        Price = 100,
+                    },
+                    new StockHistory
+                    {
+                        StockId = "057340ee83ddedcbeef5b1ab",
+                        Date = new DateTimeOffset(new DateTime(2020, 12, 2)),
+                        Price = 120,
+                    },
+                },
             };
-            stocks.Add(stock1);
-            stocks.Add(stock2);
 
-
-            //Stock Histories
-            List<StockHistory> stockHistories = new List<StockHistory>();
-            var stockHistory1 = new StockHistory()
-            {
-                StockId = stock1.Id,
-                Date = new DateTimeOffset(new DateTime(2018, 12, 02)),
-                Price = 45
-            };
-            stock1.StockHistories.Add(stockHistory1);
-
-            var stockHistory2 = new StockHistory()
-            {
-                StockId = stock2.Id,
-                Date = new DateTimeOffset(new DateTime(2019, 12, 02)),
-                Price = 65
-            };
-            stock2.StockHistories.Add(stockHistory2);
-
-            var stockHistory3 = new StockHistory()
-            {
-                StockId = stock1.Id,
-                Date = new DateTimeOffset(new DateTime(2020, 12, 02)),
-                Price = 70
-            };
-            stock1.StockHistories.Add(stockHistory3);
-
-            var stockHistory4 = new StockHistory()
-            {
-                StockId = stock2.Id,
-                Date = new DateTimeOffset(new DateTime(2019, 12, 02)),
-                Price = 100
-            };
-            stock2.StockHistories.Add(stockHistory4);
-
-            var stockHistory5 = new StockHistory()
-            {
-                StockId = stock2.Id,
-                Date = new DateTimeOffset(new DateTime(2020, 12, 02)),
-                Price = 120
-            };
-            stock2.StockHistories.Add(stockHistory5);
-
-            db.CreateStockAsync(stock1);
-            db.CreateStockAsync(stock2);
-
+            await db.CreateStockAsync(microsoft);
+            await db.CreateStockAsync(google);
         }
 
         public static List<Stock> GetTestStocks()
         {
-            List<Stock> stocks = new List<Stock>();
-            stocks.Add(new Stock()
+            return new List<Stock>
             {
-                Id = (new ObjectId("e656bb6f9a358bcc3ae63c61")).ToString(),
-                Name = "Microsoft",
-                Volume = 1000,
-                Price = 85
-            });
-            stocks.Add(new Stock()
-            {
-                Id = (new ObjectId("057340ee83ddedcbeef5b1ab")).ToString(),
-                Name = "Google",
-                Volume = 1300,
-                Price = 105
-            });
-
-
-            return stocks;
+                new Stock
+                {
+                    Id = new ObjectId("e656bb6f9a358bcc3ae63c61").ToString(),
+                    Name = "Microsoft",
+                    Volume = 1000,
+                    Price = 85,
+                },
+                new Stock
+                {
+                    Id = new ObjectId("057340ee83ddedcbeef5b1ab").ToString(),
+                    Name = "Google",
+                    Volume = 1300,
+                    Price = 105,
+                },
+            };
         }
 
         public static List<StockHistory> GetTestStockHistories()
         {
-            List<StockHistory> stockHistories = new List<StockHistory>();
-            stockHistories.Add(new StockHistory()
+            return new List<StockHistory>
             {
-                StockId = "e656bb6f9a358bcc3ae63c61",
-                Date = new DateTimeOffset(new DateTime(2018, 12, 02)),
-                Price = 45
-            });
-            stockHistories.Add(new StockHistory()
-            {
-                StockId = "e656bb6f9a358bcc3ae63c61",
-                Date = new DateTimeOffset(new DateTime(2019, 12, 02)),
-                Price = 25
-            });
-            stockHistories.Add(new StockHistory()
-            {
-                StockId = "e656bb6f9a358bcc3ae63c61",
-                Date = new DateTimeOffset(new DateTime(2020, 12, 02)),
-                Price = 37
-            });
-
-
-            return stockHistories;
+                new StockHistory
+                {
+                    StockId = "e656bb6f9a358bcc3ae63c61",
+                    Date = new DateTimeOffset(new DateTime(2018, 12, 2)),
+                    Price = 45,
+                },
+                new StockHistory
+                {
+                    StockId = "e656bb6f9a358bcc3ae63c61",
+                    Date = new DateTimeOffset(new DateTime(2019, 12, 2)),
+                    Price = 25,
+                },
+                new StockHistory
+                {
+                    StockId = "e656bb6f9a358bcc3ae63c61",
+                    Date = new DateTimeOffset(new DateTime(2020, 12, 2)),
+                    Price = 37,
+                },
+            };
         }
-
-        #endregion
     }
 }

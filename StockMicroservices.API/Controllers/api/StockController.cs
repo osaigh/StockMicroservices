@@ -1,73 +1,56 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
-using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
+using StockMicroservices.API.Models;
 using StockMicroservices.API.Repository;
 using DAOStock = StockMicroservices.API.Models.Daos.Stock;
 using DTOStock = StockMicroservices.API.Models.Dtos.Stock;
 
 namespace StockMicroservices.API.Controllers.api
 {
-    //[Authorize("StockAPIPolicy")]
+    [Authorize(Policy = "StockAPIPolicy")]
     [Route("api/[controller]")]
     [ApiController]
+    [Produces("application/json")]
     public class StockController : ControllerBase
     {
-        #region Fields
+        private readonly IRepository<DAOStock> _stockRepository;
 
-        private readonly IRepository<DAOStock> _StockRepository;
-        private readonly IMapper _Mapper;
-        #endregion
-
-        #region Constructor
-        public StockController(
-            IRepository<DAOStock> stockRepository,
-            IMapper mapper)
+        public StockController(IRepository<DAOStock> stockRepository)
         {
-            _StockRepository = stockRepository;
-            _Mapper = mapper;
+            _stockRepository = stockRepository;
         }
-        #endregion
 
-        #region Methods
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<DTOStock>), (int)HttpStatusCode.OK)]
         public async Task<ActionResult<IEnumerable<DTOStock>>> Get()
         {
-            var daoStocks = await _StockRepository.GetAllAsync();
-
-            var dtoStocks = _Mapper.Map<List<DTOStock>>(daoStocks);
-
-            return Ok(dtoStocks);
+            var daoStocks = await _stockRepository.GetAllAsync();
+            return Ok(daoStocks.ToDtoList());
         }
 
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(DTOStock), (int)(HttpStatusCode.OK))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(DTOStock), (int)HttpStatusCode.OK)]
         public async Task<ActionResult<DTOStock>> Get(string id)
         {
-            if (string.IsNullOrEmpty(id))
+            if (!ObjectId.TryParse(id, out _))
             {
-                return new BadRequestObjectResult("id is null");
+                return BadRequest("id must be a valid 24 character MongoDB ObjectId.");
             }
 
-            var daoStock = await _StockRepository.GetAsync(id);
-
-            if (daoStock == null)
+            var daoStock = await _stockRepository.GetAsync(id);
+            if (daoStock is null)
             {
-                return new BadRequestObjectResult(string.Format("No Stock with id {0}",id));
+                return NotFound($"No stock found with id '{id}'.");
             }
 
-            var dtoStock = _Mapper.Map<DTOStock>(daoStock);
-
-            return Ok(dtoStock);
+            return Ok(daoStock.ToDto());
         }
-
-        #endregion
     }
 }

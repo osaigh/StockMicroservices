@@ -1,20 +1,17 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice } from "@reduxjs/toolkit";
 
 export const appSlice = createSlice({
-    name:"app",
-    initialState: {
-        screen:""
+  name: "app",
+  initialState: {
+    screen: "",
+  },
+  reducers: {
+    toggleScreen: (state, action) => {
+      state.screen = action.payload;
     },
-    reducers:{
-        toggleScreen :(state, action)=>{
-            const newState = {...state};
-            newState.screen = action.payload;
-
-            return newState;
-        }
-    }
+  },
 });
 
-export const {toggleScreen} = appSlice.actions;
+export const { toggleScreen } = appSlice.actions;
 
 export default appSlice.reducer;

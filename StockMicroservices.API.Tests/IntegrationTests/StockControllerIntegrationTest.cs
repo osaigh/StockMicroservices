@@ -1,45 +1,33 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
+using System.Net;
+using System.Net.Http.Json;
 using System.Threading.Tasks;
-using DAOs = StockMicroservices.API.Models.Daos;
-using DTOs = StockMicroservices.API.Models.Dtos;
-using Newtonsoft.Json;
 using Xunit;
+using DTOs = StockMicroservices.API.Models.Dtos;
 
 namespace StockMicroservices.API.Tests.IntegrationTests
 {
     public class StockControllerIntegrationTest : IClassFixture<CustomWebApplicationFactory<Startup>>
     {
-        #region Fields
+        private const string Url = "api/stock/";
+        private readonly CustomWebApplicationFactory<Startup> _factory;
 
-        private string url = "api/stock/";
-        private CustomWebApplicationFactory<Startup> _Factory;
-        #endregion
-
-        #region Constructor
         public StockControllerIntegrationTest(CustomWebApplicationFactory<Startup> factory)
         {
-            _Factory = factory;
+            _factory = factory;
         }
-        #endregion
-
-        #region Methods
 
         [Fact]
         public async Task Get_NoArgument_ReturnsStockCollection()
         {
-            //Arrange
-            var client = _Factory.CreateClient();
-            var server = _Factory.Server;
-            //Act
-            var response = await client.GetAsync(url);
-            var jsonString = await response.Content.ReadAsStringAsync();
-            var stocks = JsonConvert.DeserializeObject<List<DTOs.Stock>>(jsonString);
+            var client = _factory.CreateClient();
 
-            //Assert
+            var response = await client.GetAsync(Url);
+            var stocks = await response.Content.ReadFromJsonAsync<List<DTOs.Stock>>();
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             Assert.NotNull(stocks);
-            Assert.NotEmpty(stocks);
+            Assert.NotEmpty(stocks!);
         }
 
         [Theory]
@@ -47,35 +35,34 @@ namespace StockMicroservices.API.Tests.IntegrationTests
         [InlineData("057340ee83ddedcbeef5b1ab")]
         public async Task Get_ValidStockId_ReturnsStock(string stockId)
         {
-            //Arrange
-            var client = _Factory.CreateClient();
+            var client = _factory.CreateClient();
 
-            //Act
-            var response = await client.GetAsync(url + stockId);
-            var jsonString = await response.Content.ReadAsStringAsync();
-            var stock = JsonConvert.DeserializeObject<DTOs.Stock>(jsonString);
+            var response = await client.GetAsync(Url + stockId);
+            var stock = await response.Content.ReadFromJsonAsync<DTOs.Stock>();
 
-            //Assert
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             Assert.NotNull(stock);
-            Assert.Equal(stockId.ToString(), stock.Id);
+            Assert.Equal(stockId, stock!.Id);
         }
 
-        [Theory]
-        [InlineData("e6545b6f9a358bcc3ae63c63")]
-        public async Task Get_InvalidStockId_ReturnsNull(string stockId)
+        [Fact]
+        public async Task Get_UnknownStockId_ReturnsNotFound()
         {
-            //Arrange
-            var client = _Factory.CreateClient();
+            var client = _factory.CreateClient();
 
-            //Act
-            var response = await client.GetAsync(url + stockId);
-            var jsonString = await response.Content.ReadAsStringAsync();
-            var stock = JsonConvert.DeserializeObject<DTOs.Stock>(jsonString);
+            var response = await client.GetAsync(Url + "e6545b6f9a358bcc3ae63c63");
 
-            //Assert
-            Assert.Null(stock);
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
 
-        #endregion
+        [Fact]
+        public async Task Get_InvalidStockId_ReturnsBadRequest()
+        {
+            var client = _factory.CreateClient();
+
+            var response = await client.GetAsync(Url + "not-a-valid-id");
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        }
     }
 }

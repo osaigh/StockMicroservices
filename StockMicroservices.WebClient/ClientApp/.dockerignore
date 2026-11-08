@@ -1,0 +1,9 @@
+node_modules
+src
+public
+README.md
+.env
+.env.*
+Dockerfile
+Dockerfile.prebuilt
+Dockerfile.prebuilt.dockerignore

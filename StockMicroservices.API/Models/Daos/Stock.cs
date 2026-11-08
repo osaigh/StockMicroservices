@@ -1,9 +1,6 @@
-﻿using MongoDB.Bson;
+﻿using System.Collections.Generic;
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace StockMicroservices.API.Models.Daos
 {
@@ -11,9 +8,14 @@ namespace StockMicroservices.API.Models.Daos
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string Id { get; set; }
-        public string Name { get; set; }
+        public string Id { get; set; } = string.Empty;
+
+        public string Name { get; set; } = string.Empty;
+
         public double Price { get; set; }
-        public List<StockHistory> StockHistories { get; set; }
+
+        public int Volume { get; set; }
+
+        public List<StockHistory> StockHistories { get; set; } = new List<StockHistory>();
     }
 }

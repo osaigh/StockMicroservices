@@ -1,54 +1,29 @@
-﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using Moq;
 using StockMicroservices.API.Controllers.api;
 using StockMicroservices.API.Repository;
 using Xunit;
 using DAOs = StockMicroservices.API.Models.Daos;
-using DTOs = StockMicroservices.API.Models.Dtos;
 
 namespace StockMicroservices.API.Tests.UnitTests
 {
     public class StockControllerUnitTests
     {
-        #region Fields
-
-        #endregion
-
-        #region Constructor
-        public StockControllerUnitTests()
-        {
-
-        }
-        #endregion
-
-        #region Methods
-
         [Fact]
         public async Task Get_NoArgument_ReturnsStockCollection()
         {
-            //Arrange
+            var mockRepository = new Mock<IRepository<DAOs.Stock>>();
+            mockRepository.Setup(repository => repository.GetAllAsync()).ReturnsAsync(Utilities.GetTestStocks());
 
-            //AutoMapper
-            var mapper = GetMapper();
+            var controller = new StockController(mockRepository.Object);
 
-            //Stock Repo
-            var mockRepo = new Mock<IRepository<DAOs.Stock>>();
-            mockRepo.Setup(repo => repo.GetAllAsync()).ReturnsAsync(Utilities.GetTestStocks());
+            var result = await controller.Get();
 
-            //Controller
-            var stockController = new StockController(mockRepo.Object, mapper);
-
-            //Act
-            var result = await stockController.Get();
-
-            //Assert
-            Assert.NotNull(result);
-            var stocks = result.Value;
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var stocks = Assert.IsAssignableFrom<IEnumerable<StockMicroservices.API.Models.Dtos.Stock>>(okResult.Value);
             Assert.Equal(2, stocks.Count());
         }
 
@@ -56,90 +31,47 @@ namespace StockMicroservices.API.Tests.UnitTests
         [InlineData("e656bb6f9a358bcc3ae63c61")]
         public async Task Get_ValidStockId_ReturnsStock(string stockId)
         {
-            //Arrange
+            var mockRepository = new Mock<IRepository<DAOs.Stock>>();
+            mockRepository
+                .Setup(repository => repository.GetAsync(It.IsAny<object>()))
+                .ReturnsAsync((object id) => Utilities.GetTestStocks().FirstOrDefault(stock => stock.Id == id.ToString()));
 
-            //AutoMapper
-            var mapper = GetMapper();
+            var controller = new StockController(mockRepository.Object);
 
-            //Stock Repo
-            var mockRepo = new Mock<IRepository<DAOs.Stock>>();
-            mockRepo.Setup(repo => repo.GetAsync(It.IsAny<object>())).ReturnsAsync((object id) =>
-            {
-                var _id = id.ToString();
-                return Utilities.GetTestStocks()
-                                .FirstOrDefault(s => s.Id == _id);
-            });
+            var result = await controller.Get(stockId);
 
-            var stockController = new StockController(mockRepo.Object, mapper);
-
-            //Act
-            var result = await stockController.Get(stockId);
-
-            //Assert
-            Assert.NotNull(result);
-            Assert.Equal(stockId, result.Value.Id);
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var stock = Assert.IsType<StockMicroservices.API.Models.Dtos.Stock>(okResult.Value);
+            Assert.Equal(stockId, stock.Id);
         }
 
         [Theory]
         [InlineData("e656bb6f9a358bcc3ae63c68")]
-        public async Task Get_InvalidStockId_ReturnsNull(string stockId)
+        public async Task Get_UnknownStockId_ReturnsNotFound(string stockId)
         {
-            //Arrange
+            var mockRepository = new Mock<IRepository<DAOs.Stock>>();
+            mockRepository
+                .Setup(repository => repository.GetAsync(It.IsAny<object>()))
+                .ReturnsAsync((object id) => Utilities.GetTestStocks().FirstOrDefault(stock => stock.Id == id.ToString()));
 
-            //AutoMapper
-            var mapper = GetMapper();
+            var controller = new StockController(mockRepository.Object);
 
-            //Stock Repo
-            var mockRepo = new Mock<IRepository<DAOs.Stock>>();
-            mockRepo.Setup(repo => repo.GetAsync(It.IsAny<object>())).ReturnsAsync((object id) =>
-            {
-                var _id = id.ToString();
-                return Utilities.GetTestStocks()
-                                .FirstOrDefault(s => s.Id == _id);
-            });
+            var result = await controller.Get(stockId);
 
-            var stockController = new StockController(mockRepo.Object, mapper);
-
-            //Act
-            var stock = await stockController.Get(stockId);
-
-            //Assert
-            Assert.Null(stock);
+            Assert.Null(result.Value);
+            Assert.IsType<NotFoundObjectResult>(result.Result);
         }
 
-        #endregion
-
-        #region Helpers
-        private IMapper GetMapper()
+        [Fact]
+        public async Task Get_InvalidObjectId_ReturnsBadRequest()
         {
-            //AutoMapper
-            var mockMapper = new Mock<IMapper>();
-            mockMapper.Setup(mapper => mapper.Map<DTOs.Stock>(It.IsAny<DAOs.Stock>())).Returns((DAOs.Stock input) =>
-            {
-                var dtoStock = new DTOs.Stock
-                {
-                    Id = input.Id,
-                    Name = input.Name,
-                    Price = input.Price
-                };
+            var mockRepository = new Mock<IRepository<DAOs.Stock>>();
 
-                return dtoStock;
-            });
+            var controller = new StockController(mockRepository.Object);
 
-            mockMapper.Setup(mapper => mapper.Map<List<DTOs.Stock>>(It.IsAny<List<DAOs.Stock>>())).Returns((List<DAOs.Stock> inputs) =>
-            {
-                return inputs.Select(input => new DTOs.Stock()
-                {
-                    Id = input.Id,
-                    Name = input.Name,
-                    Price = input.Price
-                })
-                                        .ToList();
-            });
+            var result = await controller.Get("not-an-object-id");
 
-            return mockMapper.Object;
+            Assert.IsType<BadRequestObjectResult>(result.Result);
         }
-
-        #endregion
     }
 }

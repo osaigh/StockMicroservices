@@ -2,13 +2,14 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: stock-config
+  labels:
+    app.kubernetes.io/part-of: stockmicroservices
 data:
-  stockwebclient_env: Development
-  stockidentityserver_env: Development
-  stockapigateway_env: Development
-  identityserverurl: http://stockidentityserver:44401
-  stockapi_env: Development
-  stockapi_apiscope: StockMicroservicesAPI
-  mongo_hostname: mongo
-  mongo_database: stocks
-
+  ASPNETCORE_ENVIRONMENT: Production
+  WebClientUrl: http://localhost:44100
+  WebClientDevUrl: http://localhost:3000
+  IdentityServerUrl: http://stockidentityserver
+  ApiScope: StockMicroservicesAPI
+  CorsAllowedOrigin: http://localhost:44100
+  IdentityServerIssuer: http://localhost:44401
+  DatabaseName: stocks

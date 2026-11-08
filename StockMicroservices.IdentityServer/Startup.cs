@@ -1,22 +1,16 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Security.Cryptography.X509Certificates;
-using System.Threading.Tasks;
+using Duende.IdentityServer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Newtonsoft.Json;
 using StockMicroservices.IdentityServer.Data;
-using StockMicroservices.IdentityServer.Extensions;
 using StockMicroservices.IdentityServer.Models;
 
 namespace StockMicroservices.IdentityServer
@@ -24,109 +18,159 @@ namespace StockMicroservices.IdentityServer
     public class Startup
     {
         private readonly IWebHostEnvironment _environment;
-        public IConfiguration Configuration { get; }
+        private readonly IConfiguration _configuration;
 
         public Startup(IConfiguration configuration, IWebHostEnvironment environment)
         {
-            Configuration = configuration;
+            _configuration = configuration;
             _environment = environment;
         }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            var assembly = typeof(Startup).Assembly.GetName().Name;
-            //var filePath = Path.Combine(_environment.ContentRootPath, "stock.pfx");
-            var cert = new X509Certificate2("stock.pfx", "Password@1");
             services.AddControllersWithViews();
-            services.AddDataProtection()
-                    .PersistKeysToFileSystem(new System.IO.DirectoryInfo(@"/var"))
-                    .ProtectKeysWithCertificate(cert);
-            services.AddDbContext<ApplicationDbContext>(config =>
-                                                        {
-                                                            config.UseInMemoryDatabase("Identity");
-                                                        });
 
-            services.AddIdentity<ApplicationUser, IdentityRole>(config =>
-                                                                {
-                                                                    config.Password.RequiredLength = 4;
-                                                                    config.Password.RequireDigit = false;
-                                                                    config.Password.RequireNonAlphanumeric = false;
-                                                                    config.Password.RequireUppercase = false;
-                                                                })
-                    .AddEntityFrameworkStores<ApplicationDbContext>()
-                    .AddDefaultTokenProviders();
-
-            //services.ConfigureApplicationCookie(config =>
-            //                                    {
-            //                                        config.Cookie.Name = "Identity.Cookie";
-            //                                        config.LoginPath = "/Home/Login";
-            //                                        config.LogoutPath = "/Home/Logout";
-            //                                        config.Cookie.SameSite = SameSiteMode.Lax;
-            //                                        config.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
-            //                                    });
-
-            services.AddIdentityServer(cf =>
+            var keysPath = _configuration["IdentityServer:DataProtectionPath"];
+            if (string.IsNullOrWhiteSpace(keysPath))
             {
-                cf.UserInteraction.LoginUrl = "/Home/Login";
-                cf.UserInteraction.LogoutUrl = "/Home/Logout";
-                cf.Authentication.CookieLifetime = TimeSpan.FromHours(6);
-            })
-                    .AddAspNetIdentity<ApplicationUser>()
-                    .AddSigningCredential(cert)
-                    .AddInMemoryApiResources(IdentityServerConfiguration.GetApis())
-                    .AddInMemoryApiScopes(IdentityServerConfiguration.GetApiScopes())
-                    .AddInMemoryIdentityResources(IdentityServerConfiguration.GetIdentityResources())
-                    .AddInMemoryClients(IdentityServerConfiguration.GetClients());
-                    //.AddDeveloperSigningCredential();
+                keysPath = Path.Combine(_environment.ContentRootPath, "keys");
+            }
 
-            services.ConfigureCorsPolicy(new List<string>() { "http://localhost:44300", "http://localhost:44100", "http://localhost:44200", "http://localhost:44405" }, Configuration);
+            Directory.CreateDirectory(keysPath);
 
-            
-        }
+            var dataProtection = services.AddDataProtection()
+                .PersistKeysToFileSystem(new DirectoryInfo(keysPath))
+                .SetApplicationName("StockMicroservices");
 
-        
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-        {
-            SeedData.InitializeDatabase(app.ApplicationServices, true);
-            if (env.IsDevelopment())
+            var certificate = LoadCertificate();
+            if (certificate is not null)
             {
-                //app.UseDeveloperExceptionPage();
-                app.UseExceptionHandler("/Home/Error");
+                dataProtection.ProtectKeysWithCertificate(certificate);
+            }
+
+            services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase("Identity"));
+
+            services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+                {
+                    options.Password.RequiredLength = 8;
+                    options.Password.RequireDigit = false;
+                    options.Password.RequireNonAlphanumeric = false;
+                    options.Password.RequireUppercase = false;
+                    options.User.RequireUniqueEmail = true;
+                })
+                .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddDefaultTokenProviders();
+
+            services.ConfigureApplicationCookie(options =>
+            {
+                options.Cookie.Name = "Stock.Identity";
+                options.LoginPath = "/Home/Login";
+                options.LogoutPath = "/Home/Logout";
+                options.Cookie.SameSite = SameSiteMode.Lax;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+                options.ExpireTimeSpan = TimeSpan.FromHours(6);
+                options.SlidingExpiration = true;
+            });
+
+            var identityServer = services.AddIdentityServer(options =>
+                {
+                    options.UserInteraction.LoginUrl = "/Home/Login";
+                    options.UserInteraction.LogoutUrl = "/Home/Logout";
+                    options.Authentication.CookieLifetime = TimeSpan.FromHours(6);
+
+                    var issuerUri = _configuration["IdentityServer:IssuerUri"];
+                    if (!string.IsNullOrWhiteSpace(issuerUri))
+                    {
+                        options.IssuerUri = issuerUri;
+                    }
+                })
+                .AddAspNetIdentity<ApplicationUser>()
+                .AddInMemoryApiResources(IdentityServerConfiguration.GetApis())
+                .AddInMemoryApiScopes(IdentityServerConfiguration.GetApiScopes())
+                .AddInMemoryIdentityResources(IdentityServerConfiguration.GetIdentityResources())
+                .AddInMemoryClients(IdentityServerConfiguration.GetClients(_configuration));
+
+            if (certificate is not null)
+            {
+                identityServer.AddSigningCredential(certificate);
             }
             else
             {
-                app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                //app.UseHsts();
+                identityServer.AddDeveloperSigningCredential(
+                    persistKey: true,
+                    filename: Path.Combine(keysPath, "tempkey.jwk"));
             }
-         
+
+            services.AddCors(options =>
+            {
+                options.AddPolicy("Default", policy =>
+                {
+                    policy.WithOrigins(IdentityServerConfiguration.GetAllowedCorsOrigins(_configuration))
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .AllowCredentials();
+                });
+            });
+
+            services.AddHealthChecks();
+        }
+
+        public void Configure(IApplicationBuilder app)
+        {
+            app.UseExceptionHandler("/Home/Error");
+
             app.UseStaticFiles();
 
             app.Use(async (context, next) =>
             {
-                context.Response.Headers.Add("Content-Security-Policy", "script-src 'unsafe-inline'");
+                context.Response.Headers["Content-Security-Policy"] =
+                    "default-src 'self'; " +
+                    "script-src 'self' 'unsafe-inline'; " +
+                    "style-src 'self' 'unsafe-inline'; " +
+                    "img-src 'self' data:; " +
+                    "font-src 'self' data:; " +
+                    "connect-src 'self'; " +
+                    "frame-ancestors 'self'";
+
                 await next();
             });
 
-            
-            // Adds IdentityServer
-            app.UseIdentityServer();
-
-            // Fix a problem with chrome. Chrome enabled a new feature "Cookies without SameSite must be secure", 
-            // the cookies should be expired from https, but in eShop, the internal communication in aks and docker compose is http.
-            // To avoid this problem, the policy of cookies should be in Lax mode.
-            app.UseCookiePolicy(new CookiePolicyOptions { MinimumSameSitePolicy = SameSiteMode.Lax});
+            app.UseCookiePolicy(new CookiePolicyOptions { MinimumSameSitePolicy = SameSiteMode.Lax });
 
             app.UseRouting();
+            app.UseCors("Default");
+            app.UseIdentityServer();
             app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
-                             {
-                                 endpoints.MapDefaultControllerRoute();
-                             });
+            {
+                endpoints.MapDefaultControllerRoute();
+                endpoints.MapHealthChecks("/health");
+            });
+        }
+
+        private X509Certificate2? LoadCertificate()
+        {
+            var certificatePath = _configuration["IdentityServer:CertificatePath"];
+            if (string.IsNullOrWhiteSpace(certificatePath))
+            {
+                return null;
+            }
+
+            if (!Path.IsPathRooted(certificatePath))
+            {
+                certificatePath = Path.Combine(_environment.ContentRootPath, certificatePath);
+            }
+
+            if (!File.Exists(certificatePath))
+            {
+                throw new FileNotFoundException(
+                    $"IdentityServer:CertificatePath points to a file that does not exist: {certificatePath}");
+            }
+
+            var password = _configuration["IdentityServer:CertificatePassword"] ?? string.Empty;
+            return new X509Certificate2(certificatePath, password);
         }
     }
 }

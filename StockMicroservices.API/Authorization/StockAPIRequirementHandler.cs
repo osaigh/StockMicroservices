@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using System.Diagnostics;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
-using System;
+using Microsoft.AspNetCore.Authorization;
 
 namespace StockMicroservices.API.Authorization
 {
@@ -9,28 +9,21 @@ namespace StockMicroservices.API.Authorization
     {
         protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, StockAPIRequirement requirement)
         {
-            Debug.WriteLine(requirement.APIScope);
-            Console.WriteLine(requirement.APIScope);
-            int count = 0;
-            foreach(var c in context.User.Claims)
+            var hasScope = context.User.Claims.Any(claim =>
+                (string.Equals(claim.Type, "scope", StringComparison.OrdinalIgnoreCase) ||
+                 string.Equals(claim.Type, "scp", StringComparison.OrdinalIgnoreCase)) &&
+                claim.Value.Split(' ').Any(scope => scope == requirement.APIScope));
+
+            if (hasScope)
             {
-                count++;
-            }
-            if (!context.User.HasClaim(c => c.Value != null && c.Value == requirement.APIScope))
-            {
-                context.Fail();
-                Debug.WriteLine("Failed validation "+ count);
-                Console.WriteLine("Failed validation " + count);
+                context.Succeed(requirement);
             }
             else
             {
-                Console.WriteLine("Succeeded validation");
-                Debug.WriteLine("Succeeded validation");
-                context.Succeed(requirement);
+                context.Fail();
             }
 
-
-            return Task.FromResult(0);
+            return Task.CompletedTask;
         }
     }
 }

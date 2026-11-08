@@ -1,47 +1,189 @@
-version: '3.4'
+name: stockmicroservices
 
 services:
-  rabbitmq:
-    image: rabbitmq:3-management-alpine  
-
   mongo:
-    image: mongo
+    image: mongo:7.0
+    container_name: stock-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-root}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-admin1}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
 
   mongo-express:
-    image: mongo-express
+    image: mongo-express:1.0.2
+    container_name: stock-mongo-express
+    restart: unless-stopped
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_ROOT_USER:-root}:${MONGO_ROOT_PASSWORD:-admin1}@mongo:27017/?authSource=admin
+      ME_CONFIG_BASICAUTH: "false"
+    ports:
+      - "8081:8081"
+    depends_on:
+      mongo:
+        condition: service_healthy
 
-  stockmicroservices.stockmarketupdater:
-    image: ${DOCKER_REGISTRY-}stockmarketupdater
-    build:
-      context: .
-      dockerfile: StockMicroservices.StockMarketUpdater/Dockerfile
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: stock-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-user}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-password}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 20s
 
-  stockmicroservices.api:
-    image: ${DOCKER_REGISTRY-}stockapi
-    build:
-      context: .
-      dockerfile: StockMicroservices.API/Dockerfile
-
-
-  stockmicroservices.apigateway:
-    image: ${DOCKER_REGISTRY-}stockapigateway
-    build:
-      context: .
-      dockerfile: StockMicroservices.APIGateway/Dockerfile
-
-
-  stockmicroservices.identityserver:
-    image: ${DOCKER_REGISTRY-}stockidentityserver
+  stockidentityserver:
+    image: stockidentityserver:latest
+    container_name: stock-identityserver
     build:
       context: .
       dockerfile: StockMicroservices.IdentityServer/Dockerfile
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      WebClientUrl: http://localhost:44100
+      WebClientDevUrl: http://localhost:3000
+      Cors__AllowedOrigins__0: http://localhost:44100
+      Cors__AllowedOrigins__1: http://localhost:3000
+      IdentityServer__DataProtectionPath: /app/keys
+      IdentityServer__IssuerUri: http://localhost:44401
+    ports:
+      - "44401:80"
+    volumes:
+      - identity-keys:/app/keys
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/80'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
 
+  stockapi:
+    image: stockapi:latest
+    container_name: stock-api
+    build:
+      context: .
+      dockerfile: StockMicroservices.API/Dockerfile
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      IdentityServerUrl: http://stockidentityserver
+      APIScope: StockMicroservicesAPI
+      Cors__AllowedOrigins__0: http://localhost:44100
+      Cors__AllowedOrigins__1: http://localhost:3000
+      RabbitMq__Hostname: rabbitmq
+      RabbitMq__Port: "5672"
+      RabbitMq__Username: ${RABBITMQ_USER:-user}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD:-password}
+      Database__ConnectionString: mongodb://${MONGO_ROOT_USER:-root}:${MONGO_ROOT_PASSWORD:-admin1}@mongo:27017/?authSource=admin
+      Database__Name: stocks
+      Database__SeedOnStartup: "true"
+    ports:
+      - "44300:80"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      stockidentityserver:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/80'"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
 
-  stockmicroservices.webclient:
-    image: ${DOCKER_REGISTRY-}stockwebclient
+  stockapigateway:
+    image: stockapigateway:latest
+    container_name: stock-apigateway
+    build:
+      context: .
+      dockerfile: StockMicroservices.APIGateway/Dockerfile
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:80
+      IdentityServerUrl: http://stockidentityserver
+      APIScope: StockMicroservicesAPI
+      Cors__AllowedOrigins__0: http://localhost:44100
+      Cors__AllowedOrigins__1: http://localhost:3000
+    ports:
+      - "44405:80"
+    depends_on:
+      stockapi:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/80'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  stockmarketupdater:
+    image: stockmarketupdater:latest
+    container_name: stock-market-updater
+    build:
+      context: .
+      dockerfile: StockMicroservices.StockMarketUpdater/Dockerfile
+    restart: unless-stopped
+    environment:
+      DOTNET_ENVIRONMENT: Development
+      RabbitMq__Hostname: rabbitmq
+      RabbitMq__Port: "5672"
+      RabbitMq__Username: ${RABBITMQ_USER:-user}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD:-password}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  stockwebclient:
+    image: stockwebclient:latest
+    container_name: stock-webclient
     build:
       context: .
       dockerfile: StockMicroservices.WebClient/ClientApp/Dockerfile
+      args:
+        REACT_APP_IDENTITY_URL: http://localhost:44401
+        REACT_APP_API_URL: http://localhost:44405
+        REACT_APP_IDENTITY_CLIENT_ID: client_id_react
+    restart: unless-stopped
+    ports:
+      - "44100:80"
+    depends_on:
+      stockapigateway:
+        condition: service_healthy
+      stockidentityserver:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
-    
-  
+volumes:
+  mongo-data:
+  rabbitmq-data:
+  identity-keys:

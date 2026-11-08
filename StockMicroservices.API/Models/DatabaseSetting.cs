@@ -2,18 +2,13 @@
 {
     public class DatabaseSetting
     {
-        public string ConnectionString { get; set; } = null!;
+        /// <summary>Full MongoDB connection string, for example mongodb://root:password@mongo:27017/?authSource=admin.</summary>
+        public string ConnectionString { get; set; } = string.Empty;
 
-        public string Name { get; set; } = null!;
+        /// <summary>Database name.</summary>
+        public string Name { get; set; } = "stocks";
 
-        public string AdminUser { get; set; } = null!;
-
-        public string AdminPassword { get; set; } = null!;
-
-        public string DbUser { get; set; } = null!;
-
-        public string DbPassword { get; set; } = null!;
-
-        public string Hostname { get; set; } = null!;
+        /// <summary>Seed demo stock data when the collection is empty.</summary>
+        public bool SeedOnStartup { get; set; } = true;
     }
 }

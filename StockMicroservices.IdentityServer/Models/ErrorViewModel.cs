@@ -1,10 +1,10 @@
-using System;
+using System.Diagnostics;
 
 namespace StockMicroservices.IdentityServer.Models
 {
     public class ErrorViewModel
     {
-        public string RequestId { get; set; }
+        public string? RequestId { get; set; }
 
         public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
     }

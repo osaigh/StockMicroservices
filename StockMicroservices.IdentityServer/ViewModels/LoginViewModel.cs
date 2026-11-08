@@ -1,20 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace StockMicroservices.IdentityServer.ViewModels
 {
     public class LoginViewModel
     {
         [Required]
-        public string Username { get; set; }
+        public string Username { get; set; } = string.Empty;
+
         [Required]
-        public string Password { get; set; }
-        public string ReturnUrl { get; set; }
-        public IEnumerable<AuthenticationScheme> ExternalProviders { get; set; }
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = string.Empty;
+
+        public string? ReturnUrl { get; set; }
     }
 }

@@ -1,0 +1,23 @@
+[
+  {
+    "Name": "Local services (Mongo/RabbitMQ in Docker)",
+    "Projects": [
+      {
+        "Path": "StockMicroservices.IdentityServer\\StockMicroservices.IdentityServer.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "StockMicroservices.API\\StockMicroservices.API.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "StockMicroservices.APIGateway\\StockMicroservices.APIGateway.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "StockMicroservices.StockMarketUpdater\\StockMicroservices.StockMarketUpdater.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

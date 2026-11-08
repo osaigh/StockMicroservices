@@ -1,27 +1,24 @@
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Net;
-using System.Reflection;
-using System.Threading;
+using System.Text.Json;
 using System.Threading.Tasks;
-using AutoMapper;
 using MassTransit;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Newtonsoft.Json;
+using MongoDB.Driver;
+using StockMicroservices.API.Authorization;
 using StockMicroservices.API.Data;
 using StockMicroservices.API.Errors;
 using StockMicroservices.API.EventBusConsumer;
@@ -35,171 +32,228 @@ namespace StockMicroservices.API
 {
     public class Startup
     {
-        public IWebHostEnvironment _WebHostEnvironment { get; }
-        public IConfiguration _Configuration { get; }
+        private const string ApiPolicy = "StockAPIPolicy";
 
-        public Startup(IConfiguration configuration, IWebHostEnvironment webHostEnvironment)
+        private readonly IWebHostEnvironment _environment;
+        private readonly IConfiguration _configuration;
+
+        public Startup(IConfiguration configuration, IWebHostEnvironment environment)
         {
-            _Configuration = configuration;
-            _WebHostEnvironment = webHostEnvironment;
+            _configuration = configuration;
+            _environment = environment;
         }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
 
-            string identityServerUrl = _Configuration.GetValue(typeof(string), "IdentityServerUrl").ToString();
-            string apiScope = _Configuration.GetValue(typeof(string), "APIScope").ToString();
+            services.Configure<DatabaseSetting>(_configuration.GetSection("Database"));
+            var databaseSettings = _configuration.GetSection("Database").Get<DatabaseSetting>()
+                ?? throw new InvalidOperationException("The 'Database' configuration section is missing.");
 
-            services.AddSingleton<IStockDbContext, StockDbContext>();
-
-            //To run Stock.API.Test comeent out lines 47 - 64 and comment out the Authorization headers on the controllers
-            services.AddAuthentication(options => options.DefaultScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme)
-                    .AddJwtBearer("Bearer",
-                                  config =>
-                                  {
-                                      config.Authority = identityServerUrl;
-                                      config.Audience = apiScope;
-                                      config.RequireHttpsMetadata = false;
-                                      config.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters()
-                                      {
-                                          ValidateAudience = false,
-                                          ValidateIssuer = false
-                                      };
-                                  });
-
-            services.AddAuthorization(options =>
+            if (string.IsNullOrWhiteSpace(databaseSettings.ConnectionString))
             {
-                options.AddPolicy("StockAPIPolicy",
-                                  policy =>
-                                  {
-                                      policy.AuthenticationSchemes.Add("Bearer");
-                                      policy.AddRequirements(new StockMicroservices.API.Authorization.StockAPIRequirement(apiScope));
-                                  });
-
-            });
-
-            services.AddScoped<IAuthorizationHandler, StockMicroservices.API.Authorization.StockAPIRequirementHandler>();
-            services.AddCors(config =>
-            {
-                config.AddPolicy("AllowAll",
-                                 p =>
-                                 {
-                                     p.AllowAnyOrigin();
-                                     p.AllowAnyHeader();
-                                     p.AllowAnyMethod();
-
-                                 });
-            });
-
-
-            //AutoMapper
-            var mappingConfiguration = new MapperConfiguration(config =>
-            {
-                config.AddProfile(new MappingProfile());
-            });
-            IMapper mapper = mappingConfiguration.CreateMapper();
-            services.AddSingleton(mapper);
-
-            services.AddSwaggerGen(c =>
-                                   {
-                                       c.SwaggerDoc("v1", new OpenApiInfo { Title = "StockAPI", Version = "v1" });
-                                   });
-
-            string _hostname = _Configuration["RabbitMq:Hostname"];
-            string _username = _Configuration["RabbitMq:Username"];
-            string _password = _Configuration["RabbitMq:Password"];
-            string hostAddress = string.Format("amqp://{0}:{1}@{2}:5672", _username, _password, _hostname);
-
-            //MassTransit-RabbitMq
-            if (!_WebHostEnvironment.IsEnvironment("test"))
-            {
-                services.AddMassTransit(config =>
-                {
-                    config.AddConsumer<StockUpdateConsumer>();
-
-                    config.AddBus(provider => Bus.Factory.CreateUsingRabbitMq(cfg =>
-                    {
-                        cfg.Host(hostAddress);
-
-                        cfg.ReceiveEndpoint(EventBusConstants.STOCK_UPDATE_QUEUE, ep =>
-                        {
-                            ep.ConfigureConsumer<StockUpdateConsumer>(provider);
-                        });
-                    }));
-                });
-                services.AddMassTransitHostedService();
+                throw new InvalidOperationException("Database:ConnectionString must be configured.");
             }
 
-            //StockMarketService
-            services.AddScoped<IStockMarketService, StockMarketService>();
+            services.AddSingleton<IMongoClient>(_ => new MongoClient(databaseSettings.ConnectionString));
+            services.AddSingleton<IStockDbContext, StockDbContext>();
+            if (!_environment.IsEnvironment("test"))
+            {
+                services.AddHostedService<DatabaseSeeder>();
+            }
 
-            //Repositories
+            services.AddHealthChecks()
+                .AddCheck<MongoHealthCheck>("mongodb", tags: new[] { "ready" });
+
+            AddAuthentication(services);
+            AddCors(services);
+
+            services.AddSwaggerGen(options =>
+            {
+                options.SwaggerDoc("v1", new OpenApiInfo { Title = "Stock API", Version = "v1" });
+                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header,
+                    Description = "JWT issued by the Stock Identity Server.",
+                });
+                options.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer",
+                            },
+                        },
+                        Array.Empty<string>()
+                    },
+                });
+            });
+
+            AddEventBus(services);
+
+            services.AddScoped<IStockMarketService, StockMarketService>();
             services.AddScoped<IRepository<Stock>, StockRepository>();
-            services.Configure<DatabaseSetting>(_Configuration.GetSection("Database"));
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IStockDbContext stockDbContext)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILogger<Startup> logger)
         {
-            if (env.IsEnvironment("local") || env.IsEnvironment("development"))
+            app.UseSwagger();
+            app.UseSwaggerUI(options => options.SwaggerEndpoint("/swagger/v1/swagger.json", "Stock API v1"));
+
+            if (env.IsDevelopment())
             {
-                SeedData.InitializeDatabase(app.ApplicationServices);
+                app.UseDeveloperExceptionPage();
             }
 
-
-            app.UseSwagger();
-
-            app.UseSwaggerUI(c =>
-                             {
-                                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "StockAPI v1");
-                             });
-
-            
-
-            app.UseExceptionHandler(appError =>
+            app.UseExceptionHandler(errorApp =>
             {
-                appError.Run(async context =>
+                errorApp.Run(async context =>
                 {
+                    var feature = context.Features.Get<IExceptionHandlerFeature>();
+                    var error = feature?.Error;
+
+                    logger.LogError(error, "Unhandled exception while processing {Method} {Path}", context.Request.Method, context.Request.Path);
+
                     context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                    context.Response.ContentType = "application/json";
-                    IExceptionHandlerFeature contextFeature = context.Features.Get<IExceptionHandlerFeature>();
-                    if (contextFeature != null)
+                    context.Response.ContentType = "application/problem+json";
+
+                    var payload = new ErrorMessage
                     {
-                        var message = (contextFeature.Error != null) ? contextFeature.Error.Message : "Internal Server Error (500)";
-                        if(contextFeature.Endpoint != null)
-                        {
-                            message += String.Format(" {0}", contextFeature.Endpoint);
-                        }
+                        Message = env.IsDevelopment() ? error?.Message ?? "Internal Server Error (500)" : "An unexpected error occurred.",
+                        StackTrace = env.IsDevelopment() ? error?.StackTrace : null,
+                    };
 
-                        var errorMessage = new ErrorMessage
-                        {
-                            Message = message,
-                            StackTrace = (contextFeature.Error != null) ? contextFeature.Error.StackTrace : string.Empty
-                        };
-
-                        var jsonString = JsonConvert.SerializeObject(errorMessage);
-
-                        await context.Response.WriteAsync(jsonString);
-                    }
+                    await context.Response.WriteAsync(JsonSerializer.Serialize(payload));
                 });
             });
 
-            //app.UseHttpsRedirection();
-
-            app.UseCors("AllowAll");
-
+            app.UseCors("Default");
             app.UseRouting();
-
             app.UseAuthentication();
-
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
+                endpoints.MapHealthChecks("/health/ready", new HealthCheckOptions
+                {
+                    Predicate = registration => registration.Tags.Contains("ready"),
+                });
             });
+        }
+
+        private void AddAuthentication(IServiceCollection services)
+        {
+            var identityServerUrl = RequireSetting("IdentityServerUrl");
+            var apiScope = RequireSetting("APIScope");
+
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.Authority = identityServerUrl;
+                    options.Audience = apiScope;
+                    options.RequireHttpsMetadata = _configuration.GetValue("IdentityServer:RequireHttpsMetadata", false);
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateAudience = true,
+                        ValidateIssuer = true,
+                        NameClaimType = "name",
+                        RoleClaimType = "role",
+                    };
+                });
+
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy(ApiPolicy, policy =>
+                {
+                    if (!_environment.IsEnvironment("test"))
+                    {
+                        policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
+                    }
+
+                    policy.RequireAuthenticatedUser();
+                    policy.AddRequirements(new StockAPIRequirement(apiScope));
+                });
+            });
+
+            services.AddScoped<IAuthorizationHandler, StockAPIRequirementHandler>();
+        }
+
+        private void AddCors(IServiceCollection services)
+        {
+            var allowedOrigins = _configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+                ?? Array.Empty<string>();
+
+            services.AddCors(options =>
+            {
+                options.AddPolicy("Default", policy =>
+                {
+                    if (allowedOrigins.Length == 0)
+                    {
+                        policy.AllowAnyOrigin();
+                    }
+                    else
+                    {
+                        policy.WithOrigins(allowedOrigins);
+                    }
+
+                    policy.AllowAnyHeader().AllowAnyMethod();
+                });
+            });
+        }
+
+        private void AddEventBus(IServiceCollection services)
+        {
+            if (_environment.IsEnvironment("test"))
+            {
+                return;
+            }
+
+            var host = RequireSetting("RabbitMq:Hostname");
+            var port = _configuration.GetValue("RabbitMq:Port", 5672);
+            var username = RequireSetting("RabbitMq:Username");
+            var password = RequireSetting("RabbitMq:Password");
+
+            services.AddMassTransit(bus =>
+            {
+                bus.AddConsumer<StockUpdateConsumer>();
+
+                bus.UsingRabbitMq((context, config) =>
+                {
+                    config.Host(host, (ushort)port, "/", hostConfig =>
+                    {
+                        hostConfig.Username(username);
+                        hostConfig.Password(password);
+                    });
+
+                    config.ReceiveEndpoint(EventBusConstants.STOCK_UPDATE_QUEUE, endpoint =>
+                    {
+                        endpoint.PrefetchCount = 16;
+                        endpoint.UseMessageRetry(retry => retry.Interval(3, TimeSpan.FromSeconds(2)));
+                        endpoint.ConfigureConsumer<StockUpdateConsumer>(context);
+                    });
+                });
+            });
+        }
+
+        private string RequireSetting(string key)
+        {
+            var value = _configuration[key];
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                throw new InvalidOperationException($"Configuration value '{key}' is required.");
+            }
+
+            return value;
         }
     }
 }
